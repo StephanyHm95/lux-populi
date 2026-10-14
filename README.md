@@ -7,3 +7,4 @@ Proyecto DAW 2026-27: simulador de ahorro solar y solicitud de visitas
 - Rosalía Caneiro Mera		rosalia.caneiro@alu.ceacfp.es
 - Jesus Fernández Jiménez
 jesus.fernandezjimenez@alu.ceacfp.es
+Adrian Plaza Alcoceradrian.plaza@alu.ceacfp.es
