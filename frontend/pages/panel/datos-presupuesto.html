@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Datos presupuesto</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/assets/css/estilos.css">
+</head>
+
+<body>
+  <div id="app">
+    <header-component></header-component>
+
+    <!-- Contenido específico de la página -->
+  </div>
+
+  <!-- JS -->
+  <script src="/assets/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/vue.global.js"></script>
+  <script src="/assets/js/axios.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+
+  <!-- Componentes -->
+  <script src="/assets/js/components/Header.js"></script>
+  <script src="/assets/js/components/Footer.js"></script>
+  <script src="/assets/js/components/Chat.js"></script>
+
+  <!-- Inicialización de Vue -->
+  <script>
+    const app = Vue.createApp({});
+    app.component("header-component", HeaderComponent);
+    app.component("footer-component", FooterComponent);
+    app.component("chat-component", ChatComponent);
+    app.mount("#app");
+  </script>
+</body>
+</html>
