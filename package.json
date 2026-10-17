@@ -1,0 +1,23 @@
+{
+  "name": "simulador-solar-instalador",
+  "version": "1.0.0",
+  "description": "Proyecto DAW 2026-27: simulador de ahorro solar y solicitud de visitas",
+  "main": "index.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github-personal:StephanyHm95/simulador-solar-instalador.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0",
+    "mysql2": "^3.24.5"
+  }
+}
