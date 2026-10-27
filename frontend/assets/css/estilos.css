@@ -1,0 +1,442 @@
+/* ===== Reglas comunes ===== */
+
+:root {
+  /* Anchura máxima común para cabecera, contenido y pie */
+  --lp-max-width: 1200px;
+}
+
+ /* ===== Contenedor principal Vue =====*/
+
+#app {
+  display: flex;
+  min-height: 100vh;
+  /* Usa el alto visible real en móviles, donde las barras del navegador cambian el viewport. */
+  min-height: 100dvh;
+  flex-direction: column;
+}
+
+#app > main {
+  display: flex;
+  /* Ocupa todo el espacio libre entre cabecera y pie. */
+  flex: 1;
+  /* Los elementos internos se apilan verticalmente. */
+  flex-direction: column;
+}
+
+#app > main.container {
+  /* Conserva un margen lateral y limita el contenido al ancho compartido del sitio. */
+  width: min(100% - 2rem, var(--lp-max-width));
+  max-width: var(--lp-max-width);
+}
+
+/*  ===== Cabecera ===== */
+
+.lp-header {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  background: #fff;
+  border-bottom: 1px solid #e5e9e7;
+  box-shadow: 0 2px 10px rgb(21 54 42 / 5%);
+}
+
+.lp-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Mantiene el contenido alineado con el principal y el pie. */
+  width: min(100% - 2rem, var(--lp-max-width));
+  min-height: 76px;
+  margin: 0 auto;
+}
+
+.lp-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #173f32;
+  text-decoration: none;
+}
+
+.lp-header__brand-mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 12px;
+  background: #e6f3ed;
+  color: #23704f;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.lp-header__brand-name {
+  font-size: 1.25rem;
+  letter-spacing: -0.04em;
+}
+
+.lp-header__navigation {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.lp-header__link {
+  color: #344b42;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.lp-header__link:hover,
+.lp-header__link:focus-visible {
+  color: #23704f;
+}
+
+.lp-header__account {
+  color: #52665d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.lp-header__button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  border: 1px solid #23704f;
+  border-radius: 8px;
+  background: #23704f;
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.lp-header__button:hover,
+.lp-header__button:focus-visible {
+  border-color: #185b3e;
+  background: #185b3e;
+  color: #fff;
+}
+
+.lp-header__button--secondary {
+  border-color: #d5e2dc;
+  background: #fff;
+  color: #23704f;
+}
+
+.lp-header__button--secondary:hover,
+.lp-header__button--secondary:focus-visible {
+  border-color: #23704f;
+  background: #f2f8f5;
+  color: #185b3e;
+}
+
+.lp-header__toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid #d5e2dc;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.lp-header__toggle span {
+  width: 19px;
+  height: 2px;
+  border-radius: 2px;
+  background: #173f32;
+}
+
+.lp-header a:focus-visible,
+.lp-header button:focus-visible {
+  outline: 3px solid #91c9ac;
+  outline-offset: 3px;
+}
+
+/* ====== Pie de página ===== */
+
+.lp-footer {
+  width: 100%;
+  border-top: 1px solid #e5e9e7;
+  background: #f7faf8;
+  color: #52665d;
+}
+
+.lp-footer__inner {
+  display: flex;
+  width: min(100% - 2rem, var(--lp-max-width));
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+.lp-footer__notice {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.lp-footer__link {
+  color: #23704f;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.lp-footer__link:hover,
+.lp-footer__link:focus-visible {
+  color: #185b3e;
+}
+
+.lp-footer__link:focus-visible {
+  outline: 3px solid #91c9ac;
+  outline-offset: 3px;
+}
+
+/* ===== Chat de ayuda ===== */
+
+.lp-chat {
+  z-index: 20;
+  display: flex;
+  /* El contenedor principal tiene 0.75rem de padding a cada lado.
+     Se amplía el ancho para alinear visualmente el chat con el
+     header y el footer. */
+  width: calc(100% + 1.5rem);
+  max-width: var(--lp-max-width);
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 0.75rem;
+  /* Empuja el chat al final del contenedor flex. */
+  margin-top: auto;
+  /* Anula el padding lateral del contenedor padre para que el chat
+    llegue exactamente al mismo borde visual que el resto de bloques. */
+  margin-right: -0.75rem;
+  margin-left: -0.75rem;
+}
+
+.lp-chat__toggle,
+.lp-chat__send {
+  min-height: 46px;
+  padding: 0.7rem 1.1rem;
+  border: 1px solid #185b3e;
+  border-radius: 999px;
+  background: #23704f;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lp-chat__toggle:hover,
+.lp-chat__toggle:focus-visible,
+.lp-chat__send:hover:not(:disabled),
+.lp-chat__send:focus-visible:not(:disabled) {
+  background: #185b3e;
+}
+
+.lp-chat__window {
+  display: flex;
+  /* Limita el ancho en móvil y deja espacio vertical para el botón del chat. */
+  width: min(22rem, calc(100vw - 2rem));
+  max-height: min(34rem, calc(100dvh - 7rem));
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #d5e2dc;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgb(21 54 42 / 20%);
+}
+
+.lp-chat__header {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #23704f;
+  color: #fff;
+}
+
+.lp-chat__title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.lp-chat__close {
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lp-chat__notice {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e9e7;
+  background: #f2f8f5;
+  color: #344b42;
+  font-size: 0.8rem;
+}
+
+.lp-chat__messages {
+  /* Permite que el área se encoja en el flex y active su propio scroll. */
+  min-height: 0;
+  flex: 1 1 auto;
+  padding: 0.75rem 1rem;
+  overflow-y: auto;
+}
+
+.lp-chat__welcome,
+.lp-chat__message,
+.lp-chat__typing {
+  margin: 0 0 0.75rem;
+  color: #344b42;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lp-chat__message--usuario {
+  color: #185b3e;
+}
+
+.lp-chat__typing {
+  font-style: italic;
+}
+
+.lp-chat__error {
+  margin: 0;
+  padding: 0 1rem 0.5rem;
+  color: #9b1c1c;
+  font-size: 0.875rem;
+}
+
+.lp-chat__form {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid #e5e9e7;
+}
+
+.lp-chat__label {
+  color: #344b42;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.lp-chat__input {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #9aaea4;
+  border-radius: 8px;
+  color: #1f3028;
+  font: inherit;
+  resize: vertical;
+}
+
+.lp-chat__send {
+  justify-self: end;
+  min-height: 40px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.lp-chat__send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.lp-chat button:focus-visible,
+.lp-chat__input:focus-visible {
+  outline: 3px solid #91c9ac;
+  outline-offset: 2px;
+}
+
+
+/* ===== Media queries ===== */
+
+/* Adaptación para tablet pequeña y móvil:
+   el menú horizontal pasa a desplegable y se reorganizan
+   los bloques para aprovechar mejor el espacio disponible. */
+@media (max-width: 720px) {
+  .lp-header__inner {
+    min-height: 68px;
+  }
+
+  .lp-header__toggle {
+    display: flex;
+  }
+
+  .lp-header__navigation {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    /* En móvil el menú queda oculto hasta que Vue añade la clase --open. */
+    display: none;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+    /* Mantiene el menú alineado con la retícula principal del sitio.
+      En pantallas pequeñas conserva al menos 1rem de margen lateral. */
+    padding: 0.5rem max(1rem, calc((100% - var(--lp-max-width)) / 2));
+    border-bottom: 1px solid #e5e9e7;
+    background: #fff;
+    box-shadow: 0 8px 14px rgb(21 54 42 / 8%);
+  }
+
+  .lp-header__navigation--open {
+    display: flex;
+  }
+
+  .lp-header__link,
+  .lp-header__account {
+    padding: 0.85rem 0;
+  }
+
+  .lp-header__button {
+    margin: 0.45rem 0;
+  }
+
+  .lp-footer__inner {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .lp-chat__window {
+    /* Evita que la ventana del chat sobresalga de la pantalla
+      en móviles o ventanas con poca altura. */
+    max-height: min(34rem, calc(100dvh - 6rem));
+  }
+}
+/* Respeta la preferencia de accesibilidad del usuario y
+   elimina las transiciones si tiene reducido el movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  .lp-header__link,
+  .lp-header__button {
+    transition: none;
+  }
+}
