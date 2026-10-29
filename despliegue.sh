@@ -93,6 +93,10 @@ else
   say "Se conservará el .env existente."
 fi
 
+# Leer el puerto público configurado para mostrar la dirección correcta.
+PUERTO_PUBLICO="$(sed -n 's/^PUERTO_PUBLICO=//p' .env | tail -n 1)"
+PUERTO_PUBLICO="${PUERTO_PUBLICO:-3000}"
+
 # Si el usuario no tiene acceso directo al socket de Docker, usar sudo.
 if docker info >/dev/null 2>&1; then
   DOCKER=(docker)
@@ -105,8 +109,13 @@ say "Estado de los servicios:"
 "${DOCKER[@]}" compose ps
 
 printf '\nDespliegue finalizado.\n'
-printf 'En esta máquina: http://localhost:3000\n'
+printf 'En esta máquina: http://localhost:%s\n' "$PUERTO_PUBLICO"
+
 LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
-if [[ -n "${LAN_IP:-}" ]]; then printf 'En la red local: http://%s:3000\n' "$LAN_IP"; fi
-printf 'Registros: cd "%s" && %s compose logs -f\n' "$PROJECT_DIR" "$( [[ ${DOCKER[0]} == sudo ]] && printf 'sudo docker' || printf 'docker' )"
+if [[ -n "${LAN_IP:-}" ]]; then
+  printf 'En la red local: http://%s:%s\n' "$LAN_IP" "$PUERTO_PUBLICO"
+fi
+
+printf 'Registros: cd "%s" && %s compose logs -f\n' \
+  "$PROJECT_DIR" "$( [[ ${DOCKER[0]} == sudo ]] && printf 'sudo docker' || printf 'docker' )"
 printf 'La base de datos persiste en el volumen Docker datos_mysql.\n'
