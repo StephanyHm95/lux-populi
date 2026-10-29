@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD en .env}
+      MYSQL_DATABASE: ${DB_NOMBRE:?Falta DB_NOMBRE en .env}
+      MYSQL_USER: ${DB_USER:?Falta DB_USER en .env}
+      MYSQL_PASSWORD: ${DB_CONTRASENA:?Falta DB_CONTRASENA en .env}
+    volumes:
+      - datos_mysql:/var/lib/mysql
+      - ./database/luxpopuli.sql:/docker-entrypoint-initdb.d/001-luxpopuli.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  app:
+    image: luxpopuli:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_PUERTO: "3306"
+    ports:
+      - "${PUERTO_PUBLICO:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  datos_mysql:
