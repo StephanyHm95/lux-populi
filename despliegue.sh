@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 # Despliegue inicial de LuxPopuli en Ubuntu, Debian o Linux Mint.
-REPO_URL="https://github.com/StephanyHm95/lux-populi.git"
+REPO_URL="git@github.com:StephanyHm95/lux-populi.git"
 DEPLOY_DIR="${LUXPOPULI_DIR:-$HOME/LuxPopuli}"
 
 say() { printf '\n[LuxPopuli] %s\n' "$*"; }
@@ -103,8 +103,24 @@ if docker info >/dev/null 2>&1; then
 else
   DOCKER=(sudo docker)
 fi
-say "Construyendo la aplicación e iniciando LuxPopuli y MySQL..."
-"${DOCKER[@]}" compose up -d --build
+"${DOCKER[@]}" compose up -d --build --wait --wait-timeout 300
+
+say "Comprobando que la aplicación responde..."
+for intento in {1..30}; do
+  if curl --fail --silent --show-error \
+      "http://127.0.0.1:${PUERTO_PUBLICO}/" \
+      --output /dev/null 2>/dev/null; then
+    break
+  fi
+  if [[ "$intento" -eq 30 ]]; then
+    say "La aplicación no respondió. Estos son los registros:"
+    "${DOCKER[@]}" compose ps -a
+    "${DOCKER[@]}" compose logs --tail=100 app db
+    fail "El despliegue no se ha completado correctamente."
+  fi
+  sleep 2
+done
+
 say "Estado de los servicios:"
 "${DOCKER[@]}" compose ps
 

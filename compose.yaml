@@ -14,8 +14,8 @@ services:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
       interval: 5s
       timeout: 5s
-      retries: 20
-      start_period: 30s
+      retries: 30
+      start_period: 120s
 
   app:
     image: luxpopuli:local
