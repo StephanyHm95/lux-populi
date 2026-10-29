@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 # Despliegue inicial de LuxPopuli en Ubuntu, Debian o Linux Mint.
-REPO_URL="git@github.com:StephanyHm95/lux-populi.git"
+REPO_URL="https://github.com/StephanyHm95/lux-populi.git"
 DEPLOY_DIR="${LUXPOPULI_DIR:-$HOME/LuxPopuli}"
 
 say() { printf '\n[LuxPopuli] %s\n' "$*"; }
