@@ -62,4 +62,12 @@ router.post("/login", async (req, res) => {
     }
 });
 
+//Ruta 4: GET /api/auth/yo  - quien inicia sesión
+router.get("/yo", requiereSesion, (req, res) => {
+    res.status(200).json(req.session.usuario);
+});
+
+
+
+
 module.exports = router;
