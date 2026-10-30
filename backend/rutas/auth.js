@@ -67,7 +67,17 @@ router.get("/yo", requiereSesion, (req, res) => {
     res.status(200).json(req.session.usuario);
 });
 
+//Ruta 3: POST /api/auth/logout  - cerrar sesión
+router.post("/logout", requiereSesion, (req, res) => {
+    req.session.destroy((error) => {
+        if (error) {
+            return res.status(500).json({ error: "Error al cerrar sesión" });
+        }
 
+        res.clearCookie("connect.sid", {path : "/"});
+        res.status(200).json({ ok: true });
+    });
+});
 
 
 module.exports = router;
