@@ -2,7 +2,7 @@
 const api = axios.create({
     // Prefijo común: las rutas se escriben a partir de /api.
     baseURL: "/api",
-    // Incluye las cookies de sesión en las solicitudes al servidor.
+    // Incluye las cookies de sesión en las peticiones al servidor.
     withCredentials: true
 });
 

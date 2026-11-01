@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora</title>
+  <title>Calculadora solar | Lux Populi</title>
 
   <!-- CSS -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
@@ -17,7 +17,381 @@
     <main class="container flex-grow-1 d-flex flex-column py-4 py-md-5">
       <div class="row g-4 flex-grow-1">
         <div class="col-12">
-          <!-- contenido específico -->
+          <section class="lp-calculator" aria-labelledby="calculadora-title">
+            <div class="lp-calculator__intro">
+              <h1 id="calculadora-title">Calculadora solar</h1>
+              <p>
+                Introduce los datos de tu vivienda o edificio para conocer una estimación
+                de tu instalación solar.
+              </p>
+            </div>
+
+            <!-- Cuanso se envíe el formulario, @submit escucha el evento submit al pulsar el botón y
+              el modificador .prevent de Vue evita que se recargue la página y llama al método calcular() en calculadora.js -->
+            <form
+              id="calculadora-form"
+              class="lp-calculator__form card p-3 p-md-4"
+              @submit.prevent="calcular()"
+            >
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label for="codigoPostal" class="form-label">Código postal</label>
+                  <input
+                    id="codigoPostal"
+                    name="codigoPostal"
+                    class="form-control"
+                    :class="{ 'is-invalid': errores.codigoPostal }"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="postal-code"
+                    v-model="formulario.codigoPostal"
+                    :aria-describedby="errores.codigoPostal ? 'codigoPostal-error' : null"
+                    pattern="[0-9]{5}"
+                    minlength="5"
+                    maxlength="5"
+                    required
+                  >
+                  <div
+                    v-if="errores.codigoPostal"
+                    id="codigoPostal-error"
+                    class="invalid-feedback"
+                  >
+                    {{ errores.codigoPostal }}
+                  </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <fieldset>
+                    <legend class="form-label">Tipo de instalación</legend>
+                    <div class="form-check form-check-inline">
+                      <input
+                        id="tipoInstalacionCasa"
+                        name="tipoInstalacion"
+                        class="form-check-input"
+                        type="radio"
+                        value="casa"
+                        v-model="formulario.tipoInstalacion"
+                        aria-controls="datos-vivienda"
+                        required
+                      >
+                      <label for="tipoInstalacionCasa" class="form-check-label">Casa</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input
+                        id="tipoInstalacionEdificio"
+                        name="tipoInstalacion"
+                        class="form-check-input"
+                        type="radio"
+                        value="edificio"
+                        v-model="formulario.tipoInstalacion"
+                        aria-controls="datos-edificio"
+                        required
+                      >
+                      <label for="tipoInstalacionEdificio" class="form-check-label">Edificio</label>
+                    </div>
+                  </fieldset>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label for="tipoTejado" class="form-label">Tipo de tejado</label>
+                  <select
+                    id="tipoTejado"
+                    name="tipoTejado"
+                    class="form-select"
+                    v-model="formulario.tipoTejado"
+                    required
+                  >
+                    <option value="" disabled>Selecciona una opción</option>
+                    <option value="inclinado">Inclinado</option>
+                    <option value="plano">Plano</option>
+                  </select>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label for="superficie" class="form-label">Superficie disponible (m²)</label>
+                  <input
+                    id="superficie"
+                    name="superficie"
+                    class="form-control"
+                    :class="{ 'is-invalid': Boolean(errores.superficie) }"
+                    type="number"
+                    v-model="formulario.superficie"
+                    min="0.01"
+                    step="any"
+                    :aria-invalid="Boolean(errores.superficie)"
+                    :aria-describedby="errores.superficie ? 'error-superficie' : null"
+                    @input="limpiarError('superficie')"
+                    required
+                  >
+                  <div
+                    v-if="errores.superficie"
+                    id="error-superficie"
+                    class="invalid-feedback"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {{ errores.superficie }}
+                  </div>
+                </div>
+
+                <!-- Cuando se selecciona "Casa" o "Edificio" v-model actualiza la variable
+                    formulario.tipoInstalacion, Vue recalcula internamente esCasa y esEdificio,
+                    v.show usa esas computed para que aparezcan o se oculten los bloques correspondientes. -->
+                <div v-show="esCasa" id="datos-vivienda" class="col-12">
+                  <fieldset class="lp-calculator__fieldset">
+                    <legend class="float-none w-auto px-2">Datos de la vivienda</legend>
+                    <label for="consumoMensual" class="form-label">Consumo eléctrico mensual (kWh)</label>
+                    <input
+                      id="consumoMensual"
+                      name="consumoMensual"
+                      class="form-control"
+                      :class="{ 'is-invalid': Boolean(errores.consumoMensual) }"
+                      type="number"
+                      v-model="formulario.consumoMensual"
+                      min="0.01"
+                      step="any"
+                      :aria-invalid="Boolean(errores.consumoMensual)"
+                      :aria-describedby="errores.consumoMensual ? 'error-consumoMensual' : null"
+                      @input="limpiarError('consumoMensual')"
+                      :required="esCasa"
+                    >
+                    <div
+                      v-if="errores.consumoMensual"
+                      id="error-consumoMensual"
+                      class="invalid-feedback"
+                      role="alert"
+                      aria-live="polite"
+                    >
+                      {{ errores.consumoMensual }}
+                    </div>
+                  </fieldset>
+                </div>
+
+                <div v-show="esEdificio" id="datos-edificio" class="col-12">
+                  <fieldset class="lp-calculator__fieldset">
+                    <legend class="float-none w-auto px-2">Datos del edificio</legend>
+                    <div class="row g-3">
+                      <div class="col-12 col-md-6">
+                        <label for="numViviendas" class="form-label">Número de viviendas</label>
+                        <input
+                          id="numViviendas"
+                          name="numViviendas"
+                          class="form-control"
+                          :class="{ 'is-invalid': Boolean(errores.numViviendas) }"
+                          type="number"
+                          v-model="formulario.numViviendas"
+                          min="2"
+                          step="1"
+                          :aria-invalid="Boolean(errores.numViviendas)"
+                          :aria-describedby="errores.numViviendas ? 'error-numViviendas' : null"
+                          @input="limpiarError('numViviendas')"
+                          :required="esEdificio"
+                        >
+                        <div
+                          v-if="errores.numViviendas"
+                          id="error-numViviendas"
+                          class="invalid-feedback"
+                          role="alert"
+                          aria-live="polite"
+                        >
+                          {{ errores.numViviendas }}
+                        </div>
+                      </div>
+
+                      <div class="col-12 col-md-6">
+                        <label for="consumoVivienda" class="form-label">
+                          Consumo mensual por vivienda (kWh)
+                        </label>
+                        <input
+                          id="consumoVivienda"
+                          name="consumoVivienda"
+                          class="form-control"
+                          :class="{ 'is-invalid': Boolean(errores.consumoVivienda) }"
+                          type="number"
+                          v-model="formulario.consumoVivienda"
+                          min="0.01"
+                          step="any"
+                          :aria-invalid="Boolean(errores.consumoVivienda)"
+                          :aria-describedby="errores.consumoVivienda ? 'error-consumoVivienda' : null"
+                          @input="limpiarError('consumoVivienda')"
+                          :required="esEdificio"
+                        >
+                        <div
+                          v-if="errores.consumoVivienda"
+                          id="error-consumoVivienda"
+                          class="invalid-feedback"
+                          role="alert"
+                          aria-live="polite"
+                        >
+                          {{ errores.consumoVivienda }}
+                        </div>
+                      </div>
+
+                      <div class="col-12">
+                        <div class="form-check">
+                          <input
+                            id="incluirZonasComunes"
+                            name="incluirZonasComunes"
+                            class="form-check-input"
+                            type="checkbox"
+                            v-model="formulario.incluirZonasComunes"
+                          >
+                          <label for="incluirZonasComunes" class="form-check-label">
+                            Incluir zonas comunes
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- v-if crea el campo solo cuando la casilla está marcada. -->
+                      <div v-if="formulario.incluirZonasComunes" class="col-12">
+                        <label for="consumoZonasComunes" class="form-label">
+                          Consumo mensual de las zonas comunes (kWh)
+                        </label>
+                        <input
+                          id="consumoZonasComunes"
+                          name="consumoZonasComunes"
+                          class="form-control"
+                          type="number"
+                          v-model="formulario.consumoZonasComunes"
+                          min="0"
+                          step="any"
+                          :required="formulario.incluirZonasComunes"
+                        >
+                      </div>
+                    </div>
+                  </fieldset>
+                </div>
+
+                <!-- Botón muestra "Calculando..." durante la petición y "Calcular" el resto del tiempo-->
+                <div class="col-12">
+                  <button
+                    class="btn btn-primary"
+                    type="submit"
+                    :disabled="cargando"
+                  >
+                    {{ cargando ? "Calculando…" : "Calcular" }}
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- Bloque de error solo existe si errorCalculo tiene contenido y muestra el texto del error.-->
+            <p
+              v-if="errorCalculo"
+              class="lp-calculator__error alert alert-danger mt-3"
+              role="alert"
+              aria-live="polite"
+            >
+              {{ errorCalculo }}
+            </p>
+
+            <!-- El bloque de resultados solo existe si resultado tiene datos.
+              Los datos se muestran en una lista descriptiva con tarjetas responsivas -->
+            <section
+              v-if="resultado"
+              id="resultados"
+              class="lp-calculator__results"
+              aria-labelledby="resultados-title"
+              aria-live="polite"
+            >
+              <h2 id="resultados-title" class="lp-calculator__results-title">
+                Resultados de tu estimación
+              </h2>
+              <p class="lp-calculator__results-intro">Estimación orientativa, no vinculante.</p>
+
+              <dl class="row g-3">
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="lp-calculator__result-card card h-100 p-3">
+                    <dt>Provincia</dt>
+                    <dd class="mb-0">{{ resultado.provincia.nombre }}</dd>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="lp-calculator__result-card card h-100 p-3">
+                    <dt>Paneles</dt>
+                    <dd class="mb-0">{{ formatearNumero(resultado.panelesFinales) }}</dd>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="lp-calculator__result-card card h-100 p-3">
+                    <dt>Potencia instalada</dt>
+                    <dd class="mb-0">{{ formatearNumero(resultado.potenciaInstalada) }} kWp</dd>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="lp-calculator__result-card card h-100 p-3">
+                    <dt>Producción anual</dt>
+                    <dd class="mb-0">{{ formatearNumero(resultado.produccionAnual) }} kWh</dd>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="lp-calculator__result-card card h-100 p-3">
+                    <dt>Radiación solar anual de la provincia</dt>
+                    <dd class="mb-0">{{ formatearNumero(resultado.radiacionAnual) }} kWh/m²</dd>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="lp-calculator__result-card card h-100 p-3">
+                    <dt>Coste estimado</dt>
+                    <dd class="mb-0">{{ formatearEuros(resultado.coste) }}</dd>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="lp-calculator__result-card card h-100 p-3">
+                    <dt>Ahorro anual</dt>
+                    <dd class="mb-0">{{ formatearEuros(resultado.ahorroAnual) }}</dd>
+                  </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="lp-calculator__result-card card h-100 p-3">
+                    <dt>Años de amortización</dt>
+                    <dd class="mb-0">{{ formatearNumero(resultado.amortizacion) }} años</dd>
+                  </div>
+                </div>
+              </dl>
+
+              <p v-if="resultado.tejadoLimita" id="aviso-tejado" class="alert alert-info">
+                La superficie del tejado limita el número de paneles de la instalación.
+              </p>
+
+              <div
+                v-if="typeof resultado.costePorVivienda === 'number' || typeof resultado.ahorroPorVivienda === 'number'"
+                id="resultados-edificio"
+                class="row g-3 mb-4"
+              >
+                <div v-if="typeof resultado.costePorVivienda === 'number'" class="col-12 col-md-6">
+                  <div class="lp-calculator__result-card card h-100 p-3">
+                    <h3 class="h5">Coste estimado por vivienda</h3>
+                    <p class="mb-0">{{ formatearEuros(resultado.costePorVivienda) }}</p>
+                  </div>
+                </div>
+                <div v-if="typeof resultado.ahorroPorVivienda === 'number'" class="col-12 col-md-6">
+                  <div class="lp-calculator__result-card card h-100 p-3">
+                    <h3 class="h5">Ahorro anual por vivienda</h3>
+                    <p class="mb-0">{{ formatearEuros(resultado.ahorroPorVivienda) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <figure class="lp-calculator__chart card mb-4">
+                <figcaption id="grafico-produccion-titulo" class="lp-calculator__chart-title">
+                  Producción solar mensual
+                </figcaption>
+                <canvas
+                  id="grafico-produccion"
+                  role="img"
+                  aria-labelledby="grafico-produccion-titulo"
+                  :aria-label="etiquetaGraficoProduccion"
+                >
+                  Gráfico de producción solar mensual.
+                </canvas>
+              </figure>
+
+              <a class="btn btn-primary" :href="enlaceRegistro">
+                Quiero que un instalador me visite
+              </a>
+            </section>
+          </section>
         </div>
       </div>
       <chat-component></chat-component>
@@ -30,6 +404,7 @@
   <script src="../assets/js/bootstrap.bundle.min.js"></script>
   <script src="../assets/js/vue.global.js"></script>
   <script src="../assets/js/axios.min.js"></script>
+  <script src="../assets/js/chart.umd.min.js"></script>
 
   <!-- API -->
   <script src="../assets/js/api.js"></script>
@@ -41,6 +416,7 @@
 
   <!-- Componentes -->
   <script src="../assets/js/services/sesion.js"></script>
+  <script src="../assets/js/services/simulacion.js"></script>
   <script src="../assets/js/components/Header.js"></script>
   <script src="../assets/js/components/Footer.js"></script>
   <script src="../assets/js/components/Chat.js"></script>

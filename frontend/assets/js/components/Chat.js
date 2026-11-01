@@ -7,10 +7,41 @@ const ChatComponent = {
       mensaje: "",
       mensajes: [],
       enviando: false,
-      error: ""
+      error: "",
+      desplazamientoFooter: 0,
+      observadorContenido: null
     };
   },
+  mounted() {
+    window.addEventListener("scroll", this.actualizarPosicionFooter, { passive: true });
+    window.addEventListener("resize", this.actualizarPosicionFooter);
+    this.$nextTick(() => {
+      this.actualizarPosicionFooter();
+
+      const contenidoPrincipal = document.querySelector("#app > main");
+      if (contenidoPrincipal && "ResizeObserver" in window) {
+        this.observadorContenido = Vue.markRaw(
+          new window.ResizeObserver(this.actualizarPosicionFooter)
+        );
+        this.observadorContenido.observe(contenidoPrincipal);
+      }
+    });
+  },
+  beforeUnmount() {
+    window.removeEventListener("scroll", this.actualizarPosicionFooter);
+    window.removeEventListener("resize", this.actualizarPosicionFooter);
+    this.observadorContenido?.disconnect();
+  },
   methods: {
+    actualizarPosicionFooter() {
+      const footer = document.querySelector(".lp-footer");
+      if (!footer) {
+        return;
+      }
+
+      const { top } = footer.getBoundingClientRect();
+      this.desplazamientoFooter = Math.max(0, window.innerHeight - top);
+    },
     // Valida el mensaje y envía a la API el texto junto con el historial reciente.
     async enviarMensaje() {
       const texto = this.mensaje.trim();
@@ -51,7 +82,11 @@ const ChatComponent = {
   },
   // La plantilla enlaza los datos y eventos de Vue con la interfaz del chat.
   template: `
-    <section class="lp-chat" aria-label="Chat de ayuda">
+    <section
+      class="lp-chat"
+      :style="{ '--lp-chat-footer-offset': desplazamientoFooter + 'px' }"
+      aria-label="Chat de ayuda"
+    >
       <!-- Se oculta visualmente sin destruir el contenido ni el historial. -->
       <div
         v-show="abierto"

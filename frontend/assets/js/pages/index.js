@@ -3,6 +3,9 @@ console.log("Index.js cargado correctamente.");
 const app = Vue.createApp({
     data() {
         return {};
+    },
+    methods: {
+        enlacePagina
     }
 });
 

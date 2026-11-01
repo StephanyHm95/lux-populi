@@ -29,6 +29,368 @@
   max-width: var(--lp-max-width);
 }
 
+/* ===== Calculadora ===== */
+
+.lp-calculator {
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.lp-calculator__intro {
+  margin-bottom: 1.5rem;
+}
+
+.lp-calculator__intro h1 {
+  margin: 0;
+  color: #173f32;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 750;
+  letter-spacing: -0.045em;
+}
+
+.lp-calculator__intro p {
+  max-width: 42rem;
+  margin: 0.75rem 0 0;
+  color: #40584d;
+  line-height: 1.7;
+}
+
+.lp-calculator__form {
+  gap: 1rem;
+  border: 1px solid #dcebe2;
+  border-radius: 18px;
+  background: #f7faf8;
+}
+
+.lp-calculator__form .form-label,
+.lp-calculator__form legend {
+  color: #284b3c;
+  font-weight: 650;
+}
+
+.lp-calculator__form legend {
+  float: none;
+  width: auto;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.lp-calculator__form .form-control,
+.lp-calculator__form .form-select {
+  min-height: 46px;
+  border-color: #cbdcd2;
+  border-radius: 8px;
+}
+
+.lp-calculator__form .form-control:focus,
+.lp-calculator__form .form-select:focus {
+  border-color: #23704f;
+  box-shadow: 0 0 0 0.2rem rgb(35 112 79 / 18%);
+}
+
+.lp-calculator__form .form-check-input:checked {
+  border-color: #23704f;
+  background-color: #23704f;
+}
+
+.lp-calculator__form .form-check-input:focus {
+  border-color: #23704f;
+  box-shadow: 0 0 0 0.2rem rgb(35 112 79 / 18%);
+}
+
+.lp-calculator__fieldset {
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #dcebe2;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.lp-calculator__form button[type="submit"],
+.lp-calculator .btn-primary {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.25rem;
+  border-color: #23704f;
+  border-radius: 8px;
+  background: #23704f;
+  color: #fff;
+  text-align: center;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.lp-calculator__form button[type="submit"]:hover,
+.lp-calculator__form button[type="submit"]:focus-visible,
+.lp-calculator .btn-primary:hover,
+.lp-calculator .btn-primary:focus-visible {
+  border-color: #185b3e;
+  background: #185b3e;
+  color: #fff;
+}
+
+.lp-calculator__form button[type="submit"]:focus-visible,
+.lp-calculator .btn-primary:focus-visible {
+  outline: 3px solid #91c9ac;
+  outline-offset: 3px;
+}
+
+.lp-calculator__results {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+
+.lp-calculator__results-title {
+  margin: 0;
+  color: #173f32;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+}
+
+.lp-calculator__results-intro {
+  margin: 0.75rem 0 1.5rem;
+  color: #40584d;
+  line-height: 1.7;
+}
+
+.lp-calculator__result-card,
+.lp-calculator__chart {
+  height: 100%;
+  border: 1px solid #dcebe2;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgb(21 54 42 / 5%);
+}
+
+.lp-calculator__result-card dt {
+  color: #40584d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.lp-calculator__result-card dd {
+  margin-top: 0.45rem;
+  color: #173f32;
+  font-size: 1.25rem;
+  font-weight: 750;
+}
+
+.lp-calculator__chart {
+  padding: 1rem;
+}
+
+.lp-calculator__chart-title {
+  margin-bottom: 1rem;
+  color: #173f32;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.lp-calculator__results .alert {
+  border-color: #cfe4d7;
+  border-radius: 12px;
+  background: #f2f8f5;
+  color: #284b3c;
+}
+
+.lp-calculator__results .alert-danger {
+  border-color: #f1c5c5;
+  background: #fff5f5;
+  color: #842029;
+}
+
+.lp-calculator__error {
+  border-radius: 12px;
+}
+
+.lp-calculator__form button[type="submit"]:disabled {
+  border-color: #7b9b8b;
+  background: #7b9b8b;
+  cursor: wait;
+}
+
+/* ===== Inicio ===== */
+
+.lp-home-hero {
+  position: relative;
+  display: flex;
+  min-height: 28rem;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
+  padding: clamp(2rem, 8vw, 6rem) clamp(1.5rem, 8vw, 7rem);
+  border: 1px solid #dcebe2;
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 92% 18%, rgb(175 218 188 / 38%), transparent 34%),
+    linear-gradient(120deg, #f2f8f4 0%, #fbfdfb 62%, #e8f4eb 100%);
+}
+
+.lp-home-hero__eyebrow {
+  margin: 0 0 1rem;
+  color: #23704f;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lp-home-hero__title {
+  max-width: 13ch;
+  margin: 0;
+  color: #173f32;
+  font-size: clamp(2.25rem, 6vw, 4.5rem);
+  font-weight: 750;
+  letter-spacing: -0.055em;
+  line-height: 1.08;
+}
+
+.lp-home-hero__description {
+  max-width: 39rem;
+  margin: 1.5rem 0 0;
+  color: #40584d;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.7;
+}
+
+.lp-home-hero__button {
+  display: inline-flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+  padding: 0.8rem 1.4rem;
+  border: 1px solid #185b3e;
+  border-radius: 8px;
+  background: #23704f;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.lp-home-hero__button:hover,
+.lp-home-hero__button:focus-visible {
+  border-color: #185b3e;
+  background: #185b3e;
+  color: #fff;
+}
+
+.lp-home-hero__button:focus-visible {
+  outline: 3px solid #91c9ac;
+  outline-offset: 3px;
+}
+
+.lp-home-section {
+  padding: clamp(3rem, 7vw, 5.5rem) 0;
+}
+
+.lp-home-section__heading {
+  max-width: 46rem;
+  margin-bottom: 2rem;
+}
+
+.lp-home-section__eyebrow {
+  margin: 0 0 0.5rem;
+  color: #23704f;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lp-home-section__title {
+  margin: 0;
+  color: #173f32;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+}
+
+.lp-home-section__description {
+  margin: 0.85rem 0 0;
+  color: #40584d;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.lp-home-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.lp-home-info-card {
+  height: 100%;
+  padding: 1.5rem;
+  border: 1px solid #dcebe2;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.lp-home-info-card h3,
+.lp-home-step h3 {
+  margin: 0;
+  color: #173f32;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.lp-home-info-card p,
+.lp-home-step p {
+  margin: 0.6rem 0 0;
+  color: #40584d;
+  line-height: 1.65;
+}
+
+.lp-home-process {
+  margin-bottom: 2rem;
+  padding: clamp(2rem, 5vw, 3.5rem);
+  border-radius: 20px;
+  background: #f2f8f5;
+}
+
+.lp-home-process .lp-home-section__heading {
+  margin-bottom: 1.75rem;
+}
+
+.lp-home-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: home-step;
+}
+
+.lp-home-step {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid #dcebe2;
+  border-radius: 14px;
+  background: #fff;
+  counter-increment: home-step;
+}
+
+.lp-home-step::before {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-bottom: 1rem;
+  place-items: center;
+  border-radius: 50%;
+  background: #e6f3ed;
+  color: #185b3e;
+  content: counter(home-step);
+  font-weight: 800;
+}
+
 /*  ===== Cabecera ===== */
 
 .lp-header {
@@ -212,22 +574,15 @@
 /* ===== Chat de ayuda ===== */
 
 .lp-chat {
-  z-index: 20;
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + var(--lp-chat-footer-offset, 0px));
+  z-index: 1000;
   display: flex;
-  /* El contenedor principal tiene 0.75rem de padding a cada lado.
-     Se amplía el ancho para alinear visualmente el chat con el
-     header y el footer. */
-  width: calc(100% + 1.5rem);
-  max-width: var(--lp-max-width);
+  width: auto;
   align-items: flex-end;
   flex-direction: column;
   gap: 0.75rem;
-  /* Empuja el chat al final del contenedor flex. */
-  margin-top: auto;
-  /* Anula el padding lateral del contenedor padre para que el chat
-    llegue exactamente al mismo borde visual que el resto de bloques. */
-  margin-right: -0.75rem;
-  margin-left: -0.75rem;
 }
 
 .lp-chat__toggle,
@@ -380,6 +735,20 @@
    el menú horizontal pasa a desplegable y se reorganizan
    los bloques para aprovechar mejor el espacio disponible. */
 @media (max-width: 720px) {
+  .lp-home-hero {
+    min-height: 25rem;
+    border-radius: 18px;
+  }
+
+  .lp-home-info-grid,
+  .lp-home-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-home-process {
+    padding: 1.5rem;
+  }
+
   .lp-header__inner {
     min-height: 68px;
   }
@@ -431,12 +800,20 @@
       en móviles o ventanas con poca altura. */
     max-height: min(34rem, calc(100dvh - 6rem));
   }
+
+  .lp-chat {
+    right: max(0.75rem, env(safe-area-inset-right));
+    bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + var(--lp-chat-footer-offset, 0px));
+  }
 }
 /* Respeta la preferencia de accesibilidad del usuario y
    elimina las transiciones si tiene reducido el movimiento. */
 @media (prefers-reduced-motion: reduce) {
   .lp-header__link,
-  .lp-header__button {
+  .lp-header__button,
+  .lp-home-hero__button,
+  .lp-calculator__form button[type="submit"],
+  .lp-calculator .btn-primary {
     transition: none;
   }
 }

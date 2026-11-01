@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lux Populi</title>
+  <title>Lux Populi | Calcula tu ahorro solar</title>
 
   <!-- CSS -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
@@ -13,11 +13,99 @@
 <body>
   <div id="app">
     <header-component></header-component>
-
+    <!-- Contenedor centrado, ocupará todo el espacio entre cabecera y pie, 
+    contenedor Flexbox en vertical, padding 1.5rem en móvil y 3rem en pantallas medianas y grandes-->
     <main class="container flex-grow-1 d-flex flex-column py-4 py-md-5">
+      <!-- Contenedor horizontal, separación entre elementos de 1.5rem en horizontal y vertical, 
+      ocupará todo el espacio disponible -->
       <div class="row g-4 flex-grow-1">
         <div class="col-12">
-          <!-- contenido específico -->
+          <section class="lp-home-hero" aria-labelledby="home-title">
+            <p class="lp-home-hero__eyebrow">Energía solar para tu hogar</p>
+            <h1 id="home-title" class="lp-home-hero__title">
+              Descubre cuánto puedes ahorrar con energía solar
+            </h1>
+            <p class="lp-home-hero__description">
+              Calcula una estimación de la producción, el coste y el ahorro de una instalación solar
+              para tu vivienda o edificio, estés donde estés en España.
+            </p>
+            <a class="lp-home-hero__button" :href="enlacePagina('calculadora')">
+              Calcula tu ahorro
+            </a>
+          </section>
+
+          <section class="lp-home-section" aria-labelledby="ayudas-title">
+            <div class="lp-home-section__heading">
+              <p class="lp-home-section__eyebrow">Información útil</p>
+              <h2 id="ayudas-title" class="lp-home-section__title">Ayudas y trámites</h2>
+              <p class="lp-home-section__description">
+                Instalar paneles solares puede dar acceso a ayudas y bonificaciones. Las condiciones
+                dependen de la normativa vigente y de cada municipio; consulta los requisitos antes
+                de iniciar los trámites.
+              </p>
+            </div>
+
+            <div class="lp-home-info-grid">
+              <article class="lp-home-info-card">
+                <h3>IRPF</h3>
+                <p>
+                  Puede haber deducciones en la declaración de la renta por obras de mejora
+                  energética, si se cumplen los requisitos establecidos.
+                </p>
+              </article>
+              <article class="lp-home-info-card">
+                <h3>IBI</h3>
+                <p>
+                  Algunos ayuntamientos ofrecen bonificaciones en el impuesto sobre bienes
+                  inmuebles para instalaciones de energía solar.
+                </p>
+              </article>
+              <article class="lp-home-info-card">
+                <h3>ICIO</h3>
+                <p>
+                  El municipio puede aplicar bonificaciones en el impuesto sobre construcciones,
+                  instalaciones y obras. Consulta las ordenanzas locales.
+                </p>
+              </article>
+              <article class="lp-home-info-card">
+                <h3>Edificios y comunidades</h3>
+                <p>
+                  Para una instalación comunitaria, hay que contar con la aprobación de la junta
+                  de propietarios por la mayoría que corresponda.
+                </p>
+              </article>
+            </div>
+          </section>
+
+          <section class="lp-home-section lp-home-process" aria-labelledby="proceso-title">
+            <div class="lp-home-section__heading">
+              <p class="lp-home-section__eyebrow">Sencillo y acompañado</p>
+              <h2 id="proceso-title" class="lp-home-section__title">Cómo funciona</h2>
+              <p class="lp-home-section__description">
+                Te acompañamos desde la primera estimación hasta recibir el presupuesto de un
+                instalador de tu provincia.
+              </p>
+            </div>
+
+            <ol class="lp-home-steps">
+              <li class="lp-home-step">
+                <h3>Calcula</h3>
+                <p>Introduce los datos de tu vivienda o edificio y consulta una estimación solar.</p>
+              </li>
+              <li class="lp-home-step">
+                <h3>Pide una visita</h3>
+                <p>Si te interesa el resultado, solicita una visita técnica.</p>
+              </li>
+              <li class="lp-home-step">
+                <h3>Te ponemos en contacto</h3>
+                <p>La centralita envía tu solicitud a un instalador de tu provincia.</p>
+              </li>
+              <li class="lp-home-step">
+                <h3>Recibe el presupuesto</h3>
+                <p>Después de la visita, podrás consultar el presupuesto desde tu área privada.</p>
+              </li>
+            </ol>
+          </section>
         </div>
       </div>
       <chat-component></chat-component>
