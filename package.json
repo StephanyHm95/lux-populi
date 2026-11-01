@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "node --watch backend/server.js"
+    "dev": "node --watch backend/server.js",
+    "test": "node --test tests/calculo.test.js",
+    "test:backend": "node --test tests/backend.test.js"
   },
   "repository": {
     "type": "git",
