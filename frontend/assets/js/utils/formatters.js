@@ -13,6 +13,7 @@ function formatearNumero(valor) {
     }).format(valor);
 }
 
+// Formatea una franja horaria en el formato "Lun 01/01 · 10:00–12:00"
 function formatearFranja(franja) {
     const [anio, mes, dia] = franja.fecha.split("-").map(Number);
     const fecha = new Date(anio, mes - 1, dia, 12)

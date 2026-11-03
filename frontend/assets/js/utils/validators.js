@@ -3,6 +3,8 @@
  * en los formularios antes de enviarlos al servidor.
  */
 
+// Validación de código postal: número de 5 cifras, 
+// y las dos primeras cifras entre 01 y 52.
 function validarCodigoPostal(cp) {
     if (typeof cp !== "string" || !/^\d{5}$/.test(cp)) {
         return false;
@@ -12,14 +14,18 @@ function validarCodigoPostal(cp) {
     return codigoProvincia >= 1 && codigoProvincia <= 52;
 }
 
+// Validación de email: debe contener texto antes y después de @ y después del punto,
+//  sin espacios.
 function validarEmail(email) {
     return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+// Validación de teléfono: debe ser un número de 9 cifras, sin espacios.
 function validarTelefono(telefono) {
     return typeof telefono === "string" && /^\d{9}$/.test(telefono.trim());
 }
 
+// Validación de contraseña: debe tener al menos 8 caracteres.
 function validarPassword(password) {
     return typeof password === "string" && password.length >= 8;
 }

@@ -17,6 +17,7 @@
     <main class="container flex-grow-1 d-flex flex-column py-4 py-md-5">
       <div class="row g-4 flex-grow-1">
         <div class="col-12 lp-calculator">
+          <!-- Presentación de la página y estados previos al formulario. -->
           <section aria-labelledby="titulo-registro" class="lp-calculator__intro">
             <h1 id="titulo-registro">Solicita una visita</h1>
             <p>Completa tus datos y elige un hueco disponible para que un instalador pueda visitar tu vivienda.</p>
@@ -32,6 +33,7 @@
           </p>
 
           <div v-if="tieneSimulacion && !cargando">
+            <!-- Quien ya tiene cuenta puede iniciar sesión y volver a este proceso. -->
             <p v-if="!haySesion" class="mb-4">
               ¿Ya tienes cuenta?
               <a :href="enlaceLogin">Inicia sesión</a>
@@ -47,6 +49,7 @@
               @submit.prevent="enviarSolicitud"
               novalidate
             >
+              <!-- Los datos de cuenta solo se solicitan a visitantes sin sesión. -->
               <fieldset v-if="!haySesion" class="lp-calculator__fieldset">
                 <legend>Datos personales</legend>
                 <div class="row g-3">
@@ -83,6 +86,7 @@
                 </div>
               </fieldset>
 
+              <!-- Dirección donde se realizará la visita; el código postal debe corresponder a la provincia simulada. -->
               <fieldset class="lp-calculator__fieldset">
                 <legend>Dirección de la instalación</legend>
                 <div class="row g-3">
@@ -104,6 +108,7 @@
                 </div>
               </fieldset>
 
+              <!-- Los huecos se cargan para la provincia y se seleccionan con un único grupo de radios. -->
               <fieldset class="lp-calculator__fieldset">
                 <legend>Elige un hueco disponible</legend>
                 <p v-if="cargandoFranjas" role="status" aria-live="polite">Consultando huecos disponibles…</p>
@@ -129,6 +134,7 @@
                 <small v-if="errores.franjaId" id="error-franjaId" class="text-danger" role="alert">{{ errores.franjaId }}</small>
               </fieldset>
 
+              <!-- La aceptación de privacidad forma parte del registro de una cuenta nueva. -->
               <div v-if="!haySesion" class="form-check">
                 <input id="aceptaPrivacidad" v-model="formulario.aceptaPrivacidad" class="form-check-input" :class="{ 'is-invalid': Boolean(errores.aceptaPrivacidad) }" name="aceptaPrivacidad" type="checkbox" required :aria-invalid="Boolean(errores.aceptaPrivacidad)" aria-describedby="error-aceptaPrivacidad" @change="limpiarError('aceptaPrivacidad')">
                 <label class="form-check-label" for="aceptaPrivacidad">
@@ -137,6 +143,7 @@
                 <small v-if="errores.aceptaPrivacidad" id="error-aceptaPrivacidad" class="d-block text-danger" role="alert">{{ errores.aceptaPrivacidad }}</small>
               </div>
 
+              <!-- Este consentimiento es necesario para enviar la solicitud al instalador colaborador. -->
               <div class="form-check">
                 <input id="aceptaEnvioDatos" v-model="formulario.aceptaEnvioDatos" class="form-check-input" :class="{ 'is-invalid': Boolean(errores.aceptaEnvioDatos) }" name="aceptaEnvioDatos" type="checkbox" required :aria-invalid="Boolean(errores.aceptaEnvioDatos)" aria-describedby="error-aceptaEnvioDatos" @change="limpiarError('aceptaEnvioDatos')">
                 <label class="form-check-label" for="aceptaEnvioDatos">
@@ -145,6 +152,7 @@
                 <small v-if="errores.aceptaEnvioDatos" id="error-aceptaEnvioDatos" class="d-block text-danger" role="alert">{{ errores.aceptaEnvioDatos }}</small>
               </div>
 
+              <!-- El estado de envío desactiva el botón y muestra una etiqueta de progreso. -->
               <button class="btn btn-primary align-self-start" type="submit" :disabled="enviando || cargandoFranjas || franjas.length === 0">
                 {{ enviando ? "Enviando…" : "Solicitar visita" }}
               </button>

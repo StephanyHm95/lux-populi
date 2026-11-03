@@ -19,7 +19,8 @@ function enlacePagina(nombrePagina) {
     login: "login.html",
     registro: "registro.html",
     miSolicitud: "mi-solicitud.html",
-    privacidad: "privacidad.html"
+    privacidad: "privacidad.html",
+    panelSolicitudes: "panel/solicitudes.html"
     };
   
   const pagina = paginas[nombrePagina];

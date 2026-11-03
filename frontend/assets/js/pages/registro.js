@@ -2,9 +2,12 @@ console.log("registro.js cargado correctamente.");
 const app = Vue.createApp({
     data() {
         return {
+            // Identifican la simulación y el código postal recibidos en la URL.
             simulacionId: null,
             codigoPostalSimulacion: "",
+            // Comienza como null, después se rellena con los datos de sesión si hay usuario logueado.
             usuario: null,
+            // Valores enlazados con los campos del formulario mediante v-model.
             formulario: {
                 nombre: "",
                 apellidos: "",
@@ -29,6 +32,7 @@ const app = Vue.createApp({
         };
     },
     computed: {
+        // Derivan el estado de sesión y el acceso al formulario de los datos del usuario.
         haySesion() {
             return !!this.usuario;
         },
@@ -59,6 +63,7 @@ const app = Vue.createApp({
         formatearFranja,
         async inicializar() {
             try {
+                // Recupera la simulación y el código postal que se pasaron desde la calculadora.
                 const parametros = new URLSearchParams(window.location.search);
                 const simulacionId = Number(parametros.get("simulacion"));
                 this.simulacionId = Number.isInteger(simulacionId) ? simulacionId : null;
@@ -69,11 +74,13 @@ const app = Vue.createApp({
                     return;
                 }
 
+                // Evita iniciar una solicitud con un código postal inválido.
                 if (!validarCodigoPostal(this.codigoPostalSimulacion)) {
                     this.errorGeneral = "El código postal de la simulación no es válido. Vuelve a realizarla.";
                     return;
                 }
 
+                // Un 401 significa que la persona es visitante; otros errores sí se muestran.
                 try {
                     this.usuario = await obtenerUsuario();
                 } catch (error) {
@@ -98,6 +105,7 @@ const app = Vue.createApp({
                     return;
                 }
 
+                // Los huecos se filtran por las dos primeras cifras del código postal.
                 await this.cargarFranjas();
             } catch (error) {
                 this.errorGeneral = error.response?.data?.error
@@ -110,11 +118,13 @@ const app = Vue.createApp({
         async cargarFranjas() {
             this.cargandoFranjas = true;
             try {
+                // Consulta los huecos libres de la provincia de la simulación.
                 this.franjas = await obtenerFranjasLibres(this.codigoPostalSimulacion.slice(0, 2));
                 if (!Array.isArray(this.franjas)) {
                     throw new Error("La respuesta de huecos disponibles no tiene el formato esperado.");
                 }
 
+                // Deselecciona el hueco si ya no aparece entre los disponibles.
                 if (!this.franjas.some(franja => String(franja.id) === String(this.formulario.franjaId))) {
                     this.formulario.franjaId = "";
                 }
@@ -123,10 +133,12 @@ const app = Vue.createApp({
             }
         },
         limpiarError(campo) {
+            // Quita el error del campo editado y limpia el mensaje general anterior.
             delete this.errores[campo];
             this.errorGeneral = "";
         },
         validarDatosPersonales() {
+            // Los datos de cuenta solo se piden a quienes todavía no han iniciado sesión.
             if (!this.haySesion) {
                 const { formulario } = this;
 
@@ -154,6 +166,7 @@ const app = Vue.createApp({
             }
         },
         validarDireccion() {
+            // Comprueba la dirección y que el código postal corresponda a la provincia simulada.
             const { formulario } = this;
             const codigoPostal = formulario.codigoPostal.trim();
 
@@ -170,6 +183,7 @@ const app = Vue.createApp({
             }
         },
         validarSolicitud() {
+            // La cita y el consentimiento para enviar datos son necesarios en todos los casos.
             if (!this.formulario.franjaId) {
                 this.errores.franjaId = "Selecciona un hueco disponible.";
             }
@@ -182,12 +196,14 @@ const app = Vue.createApp({
             this.errores = {};
             this.errorGeneral = "";
 
+            // Ejecuta las validaciones de cada bloque y permite enviar solo si no hay errores.
             this.validarDatosPersonales();
             this.validarDireccion();
             this.validarSolicitud();
             return Object.keys(this.errores).length === 0;
         },
         aplicarErrorApi(error) {
+            // Asocia los errores de campo del backend al formulario; los demás se muestran en general.
             const mensaje = error.response?.data?.error
                 || error.message
                 || "No se pudo completar la solicitud. Inténtalo de nuevo.";
@@ -200,12 +216,14 @@ const app = Vue.createApp({
             }
         },
         async enviarSolicitud() {
+            // Evita envíos duplicados y no continúa si la validación local falla.
             if (this.enviando || this.solicitudCreada || !this.validarFormulario()) {
                 return;
             }
 
             this.enviando = true;
             try {
+                // Los visitantes crean primero su cuenta; la respuesta deja la sesión iniciada.
                 if (!this.haySesion) {
                     const respuestaRegistro = await crearCuentaCliente({
                         nombre: this.formulario.nombre.trim(),
@@ -219,6 +237,7 @@ const app = Vue.createApp({
                     this.usuario = respuestaRegistro;
                 }
 
+                // Con la sesión disponible, crea la solicitud y navega a mi-solicitud.
                 await crearSolicitud({
                     simulacionId: this.simulacionId,
                     franjaId: Number(this.formulario.franjaId),
@@ -232,6 +251,7 @@ const app = Vue.createApp({
                 window.location.assign(enlacePagina("miSolicitud"));
             } catch (error) {
                 this.aplicarErrorApi(error);
+                // Si el hueco se reservó mientras se completaba el formulario, actualiza la lista.
                 if (
                     error.response?.status === 409
                     && error.response?.data?.campo === "franjaId"
@@ -244,12 +264,14 @@ const app = Vue.createApp({
                     }
                 }
             } finally {
+                // Libera el estado de envío tanto si las peticiones funcionan como si fallan.
                 this.enviando = false;
             }
         }
     }
 });
 
+// Registra los componentes comunes y monta la aplicación de registro.
 app.component("header-component", HeaderComponent);
 app.component("footer-component", FooterComponent);
 app.component("chat-component", ChatComponent);

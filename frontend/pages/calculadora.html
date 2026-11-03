@@ -26,7 +26,7 @@
               </p>
             </div>
 
-            <!-- Cuanso se envíe el formulario, @submit escucha el evento submit al pulsar el botón y
+            <!-- Cuando se envíe el formulario, @submit escucha el evento submit al pulsar el botón y
               el modificador .prevent de Vue evita que se recargue la página y llama al método calcular() en calculadora.js -->
             <form
               id="calculadora-form"
@@ -299,6 +299,7 @@
               </h2>
               <p class="lp-calculator__results-intro">Estimación orientativa, no vinculante.</p>
 
+              <!-- Resumen de los valores principales calculados por el servidor. -->
               <dl class="row g-3">
                 <div class="col-12 col-sm-6 col-lg-4">
                   <div class="lp-calculator__result-card card h-100 p-3">
@@ -350,10 +351,12 @@
                 </div>
               </dl>
 
+              <!-- Aviso opcional cuando la superficie limita la instalación. -->
               <p v-if="resultado.tejadoLimita" id="aviso-tejado" class="alert alert-info">
                 La superficie del tejado limita el número de paneles de la instalación.
               </p>
 
+              <!-- Los valores por vivienda solo se muestran cuando el resultado los incluye. -->
               <div
                 v-if="typeof resultado.costePorVivienda === 'number' || typeof resultado.ahorroPorVivienda === 'number'"
                 id="resultados-edificio"
@@ -373,6 +376,7 @@
                 </div>
               </div>
 
+              <!-- Chart.js dibuja los datos mensuales en el canvas después de recibir el resultado. -->
               <figure class="lp-calculator__chart card mb-4">
                 <figcaption id="grafico-produccion-titulo" class="lp-calculator__chart-title">
                   Producción solar mensual
@@ -387,6 +391,7 @@
                 </canvas>
               </figure>
 
+              <!-- Continúa al formulario de visita conservando el identificador de simulación y el código postal. -->
               <a class="btn btn-primary" :href="enlaceRegistro">
                 Quiero que un instalador me visite
               </a>

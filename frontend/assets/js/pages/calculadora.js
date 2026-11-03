@@ -1,7 +1,8 @@
 console.log("Calculadora.js cargado correctamente.");
+// Etiquetas del eje horizontal del gráfico, en orden de enero a diciembre.
 const mesesProduccion = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
-// Instanciar Vue
+// Crea la aplicación Vue y define el estado y las acciones de la calculadora.
 const app = Vue.createApp({
     data() {
         return {
@@ -26,6 +27,7 @@ const app = Vue.createApp({
         };
     },
     computed: {
+        // Indican qué campos específicos mostrar según el tipo de instalación seleccionado.
         esCasa() {
             return this.formulario.tipoInstalacion === "casa";
         },
@@ -68,6 +70,7 @@ const app = Vue.createApp({
     methods: {
         formatearNumero,
         formatearEuros,
+        // Elimina el error de un campo cuando el usuario vuelve a editarlo.
         limpiarError(campo) {
             delete this.errores[campo];
         },
@@ -134,10 +137,12 @@ const app = Vue.createApp({
             }));
         },
         async calcular() {
+            // Descarta los resultados y errores anteriores antes de validar una nueva consulta.
             this.resultado = null;
             this.errorCalculo = "";
             this.errores = {};
 
+            // Comprueba en el navegador los datos requeridos para evitar una petición inválida.
             if (!validarCodigoPostal(this.formulario.codigoPostal)) {
                 this.errores.codigoPostal = "Introduce un código postal válido de España.";
                 return;
@@ -164,21 +169,26 @@ const app = Vue.createApp({
                 return;
             }
 
+            // Muestra el estado de carga mientras el servidor calcula la simulación.
             this.cargando = true;
 
             try {
+                // Espera la respuesta del servicio, que devuelve los resultados de la simulación.
                 this.resultado = await crearSimulacion(this.formulario);
             } catch (error) {
+                // Prioriza el mensaje del backend y usa alternativas si no está disponible.
                 this.errorCalculo = error.response?.data?.error
                     || error.message
                     || "No se pudo calcular la estimación. Inténtalo de nuevo.";
             } finally {
+                // Restablece el estado aunque la petición termine con un error.
                 this.cargando = false;
             }
         }
     }
 });
 
+// Registra los componentes comunes utilizados también en otras páginas.
 app.component(
     "header-component",
     HeaderComponent
@@ -194,4 +204,5 @@ app.component(
     ChatComponent
 );
 
+// Monta la calculadora en el elemento raíz definido en el HTML.
 app.mount("#app");
