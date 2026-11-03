@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <title>Iniciar sesión | Lux Populi</title>
 
   <!-- CSS -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
@@ -16,8 +16,88 @@
 
     <main class="container flex-grow-1 d-flex flex-column py-4 py-md-5">
       <div class="row g-4 flex-grow-1">
-        <div class="col-12">
-          <!-- contenido específico -->
+        <div class="col-12 lp-calculator">
+          <!-- Presentación del acceso al área privada. -->
+          <section aria-labelledby="login-title" class="lp-calculator__intro">
+            <h1 id="login-title">Inicia sesión</h1>
+            <p>Accede a tu área privada para consultar y gestionar tus solicitudes.</p>
+          </section>
+
+          <!-- Formulario de inicio de sesión -->
+           
+          <!-- Escucha el evento de envío del formulario y llama a la función de inicio de sesión -->
+          <form
+            class="lp-calculator__form card p-3 p-md-4"
+            @submit.prevent="enviarLogin"
+            novalidate
+          >
+            <div>
+              <label for="email" class="form-label">Email</label>
+              <input
+                id="email"
+                v-model="formulario.email"
+                class="form-control"
+                :class="{ 'is-invalid': Boolean(errores.email) }"
+                name="email"
+                type="email"
+                autocomplete="email"
+                required
+                :aria-invalid="Boolean(errores.email)"
+                :aria-describedby="errores.email ? 'error-email' : null"
+                @input="limpiarError('email')"
+              >
+              <div
+                v-if="errores.email"
+                id="error-email"
+                class="invalid-feedback"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errores.email }}
+              </div>
+            </div>
+
+            <div>
+              <label for="password" class="form-label">Contraseña</label>
+              <input
+                id="password"
+                v-model="formulario.password"
+                class="form-control"
+                :class="{ 'is-invalid': Boolean(errores.password) }"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                :aria-invalid="Boolean(errores.password)"
+                :aria-describedby="errores.password ? 'error-password' : null"
+                @input="limpiarError('password')"
+              >
+              <div
+                v-if="errores.password"
+                id="error-password"
+                class="invalid-feedback"
+                role="alert"
+                aria-live="polite"
+              >
+                {{ errores.password }}
+              </div>
+            </div>
+
+            <!-- Mensaje para errores que no corresponden a un campo concreto. -->
+            <p
+              v-if="errorGeneral"
+              class="alert alert-danger mb-0"
+              role="alert"
+              aria-live="polite"
+            >
+              {{ errorGeneral }}
+            </p>
+
+            <!-- Se desactiva mientras se procesa el inicio de sesión. -->
+            <button class="btn btn-primary align-self-start" type="submit" :disabled="enviando">
+              {{ enviando ? "Iniciando sesión…" : "Iniciar sesión" }}
+            </button>
+          </form>
         </div>
       </div>
       <chat-component></chat-component>

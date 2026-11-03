@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro</title>
+  <title>Solicitar una visita | Registro | Lux Populi</title>
 
   <!-- CSS -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
@@ -16,8 +16,148 @@
 
     <main class="container flex-grow-1 d-flex flex-column py-4 py-md-5">
       <div class="row g-4 flex-grow-1">
-        <div class="col-12">
-          <!-- contenido específico -->
+        <div class="col-12 lp-calculator">
+          <!-- Presentación de la página y estados previos al formulario. -->
+          <section aria-labelledby="titulo-registro" class="lp-calculator__intro">
+            <h1 id="titulo-registro">Solicita una visita</h1>
+            <p>Completa tus datos y elige un hueco disponible para que un instalador pueda visitar tu vivienda.</p>
+          </section>
+
+          <p v-if="!cargando && !tieneSimulacion" class="alert alert-info" role="status">
+            Primero haz una simulación.
+            <a :href="enlacePagina('calculadora')">Ir a la calculadora</a>
+          </p>
+
+          <p v-if="cargando" class="alert alert-info" role="status" aria-live="polite">
+            Preparando la solicitud…
+          </p>
+
+          <div v-if="tieneSimulacion && !cargando">
+            <!-- Quien ya tiene cuenta puede iniciar sesión y volver a este proceso. -->
+            <p v-if="!haySesion" class="mb-4">
+              ¿Ya tienes cuenta?
+              <a :href="enlaceLogin">Inicia sesión</a>
+            </p>
+
+            <p v-if="errorGeneral" class="alert alert-danger" role="alert">
+              {{ errorGeneral }}
+            </p>
+
+            <form
+              v-if="!esAdmin"
+              class="lp-calculator__form d-flex flex-column p-3 p-md-4"
+              @submit.prevent="enviarSolicitud"
+              novalidate
+            >
+              <!-- Los datos de cuenta solo se solicitan a visitantes sin sesión. -->
+              <fieldset v-if="!haySesion" class="lp-calculator__fieldset">
+                <legend>Datos personales</legend>
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="nombre">Nombre</label>
+                    <input id="nombre" v-model="formulario.nombre" class="form-control" :class="{ 'is-invalid': Boolean(errores.nombre) }" name="nombre" autocomplete="given-name" maxlength="100" required :aria-invalid="Boolean(errores.nombre)" aria-describedby="error-nombre" @input="limpiarError('nombre')">
+                    <small v-if="errores.nombre" id="error-nombre" class="text-danger" role="alert">{{ errores.nombre }}</small>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="apellidos">Apellidos</label>
+                    <input id="apellidos" v-model="formulario.apellidos" class="form-control" :class="{ 'is-invalid': Boolean(errores.apellidos) }" name="apellidos" autocomplete="family-name" maxlength="150" required :aria-invalid="Boolean(errores.apellidos)" aria-describedby="error-apellidos" @input="limpiarError('apellidos')">
+                    <small v-if="errores.apellidos" id="error-apellidos" class="text-danger" role="alert">{{ errores.apellidos }}</small>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="email">Email</label>
+                    <input id="email" v-model="formulario.email" class="form-control" :class="{ 'is-invalid': Boolean(errores.email) }" name="email" type="email" autocomplete="email" required :aria-invalid="Boolean(errores.email)" aria-describedby="error-email" @input="limpiarError('email')">
+                    <small v-if="errores.email" id="error-email" class="text-danger" role="alert">{{ errores.email }}</small>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="telefono">Teléfono</label>
+                    <input id="telefono" v-model="formulario.telefono" class="form-control" :class="{ 'is-invalid': Boolean(errores.telefono) }" name="telefono" type="tel" inputmode="numeric" autocomplete="tel" pattern="[0-9]{9}" maxlength="9" required :aria-invalid="Boolean(errores.telefono)" aria-describedby="error-telefono" @input="limpiarError('telefono')">
+                    <small v-if="errores.telefono" id="error-telefono" class="text-danger" role="alert">{{ errores.telefono }}</small>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="password">Contraseña</label>
+                    <input id="password" v-model="formulario.password" class="form-control" :class="{ 'is-invalid': Boolean(errores.password) }" name="password" type="password" autocomplete="new-password" minlength="8" required :aria-invalid="Boolean(errores.password)" aria-describedby="error-password" @input="limpiarError('password')">
+                    <small v-if="errores.password" id="error-password" class="text-danger" role="alert">{{ errores.password }}</small>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="password2">Repite la contraseña</label>
+                    <input id="password2" v-model="formulario.password2" class="form-control" :class="{ 'is-invalid': Boolean(errores.password2) }" name="password2" type="password" autocomplete="new-password" minlength="8" required :aria-invalid="Boolean(errores.password2)" aria-describedby="error-password2" @input="limpiarError('password2')">
+                    <small v-if="errores.password2" id="error-password2" class="text-danger" role="alert">{{ errores.password2 }}</small>
+                  </div>
+                </div>
+              </fieldset>
+
+              <!-- Dirección donde se realizará la visita; el código postal debe corresponder a la provincia simulada. -->
+              <fieldset class="lp-calculator__fieldset">
+                <legend>Dirección de la instalación</legend>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label" for="direccion">Dirección</label>
+                    <input id="direccion" v-model="formulario.direccion" class="form-control" :class="{ 'is-invalid': Boolean(errores.direccion) }" name="direccion" autocomplete="street-address" maxlength="200" required :aria-invalid="Boolean(errores.direccion)" aria-describedby="error-direccion" @input="limpiarError('direccion')">
+                    <small v-if="errores.direccion" id="error-direccion" class="text-danger" role="alert">{{ errores.direccion }}</small>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="municipio">Municipio</label>
+                    <input id="municipio" v-model="formulario.municipio" class="form-control" :class="{ 'is-invalid': Boolean(errores.municipio) }" name="municipio" autocomplete="address-level2" maxlength="100" required :aria-invalid="Boolean(errores.municipio)" aria-describedby="error-municipio" @input="limpiarError('municipio')">
+                    <small v-if="errores.municipio" id="error-municipio" class="text-danger" role="alert">{{ errores.municipio }}</small>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="codigoPostal">Código postal</label>
+                    <input id="codigoPostal" v-model="formulario.codigoPostal" class="form-control" :class="{ 'is-invalid': Boolean(errores.codigoPostal) }" name="codigoPostal" inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{5}" maxlength="5" required :aria-invalid="Boolean(errores.codigoPostal)" aria-describedby="error-codigoPostal" @input="limpiarError('codigoPostal')">
+                    <small v-if="errores.codigoPostal" id="error-codigoPostal" class="text-danger" role="alert">{{ errores.codigoPostal }}</small>
+                  </div>
+                </div>
+              </fieldset>
+
+              <!-- Los huecos se cargan para la provincia y se seleccionan con un único grupo de radios. -->
+              <fieldset class="lp-calculator__fieldset">
+                <legend>Elige un hueco disponible</legend>
+                <p v-if="cargandoFranjas" role="status" aria-live="polite">Consultando huecos disponibles…</p>
+                <p v-else-if="franjas.length === 0" role="status">Ahora mismo no hay huecos libres en tu provincia.</p>
+                <div v-else class="d-flex flex-column gap-2">
+                  <div v-for="franja in franjas" :key="franja.id" class="form-check">
+                    <input
+                      :id="`franja-${franja.id}`"
+                      v-model="formulario.franjaId"
+                      class="form-check-input"
+                      :class="{ 'is-invalid': Boolean(errores.franjaId) }"
+                      type="radio"
+                      name="franjaId"
+                      :value="String(franja.id)"
+                      required
+                      :aria-invalid="Boolean(errores.franjaId)"
+                      aria-describedby="error-franjaId"
+                      @change="limpiarError('franjaId')"
+                    >
+                    <label class="form-check-label" :for="`franja-${franja.id}`">{{ formatearFranja(franja) }}</label>
+                  </div>
+                </div>
+                <small v-if="errores.franjaId" id="error-franjaId" class="text-danger" role="alert">{{ errores.franjaId }}</small>
+              </fieldset>
+
+              <!-- La aceptación de privacidad forma parte del registro de una cuenta nueva. -->
+              <div v-if="!haySesion" class="form-check">
+                <input id="aceptaPrivacidad" v-model="formulario.aceptaPrivacidad" class="form-check-input" :class="{ 'is-invalid': Boolean(errores.aceptaPrivacidad) }" name="aceptaPrivacidad" type="checkbox" required :aria-invalid="Boolean(errores.aceptaPrivacidad)" aria-describedby="error-aceptaPrivacidad" @change="limpiarError('aceptaPrivacidad')">
+                <label class="form-check-label" for="aceptaPrivacidad">
+                  Acepto la <a :href="enlacePagina('privacidad')">política de privacidad</a>.
+                </label>
+                <small v-if="errores.aceptaPrivacidad" id="error-aceptaPrivacidad" class="d-block text-danger" role="alert">{{ errores.aceptaPrivacidad }}</small>
+              </div>
+
+              <!-- Este consentimiento es necesario para enviar la solicitud al instalador colaborador. -->
+              <div class="form-check">
+                <input id="aceptaEnvioDatos" v-model="formulario.aceptaEnvioDatos" class="form-check-input" :class="{ 'is-invalid': Boolean(errores.aceptaEnvioDatos) }" name="aceptaEnvioDatos" type="checkbox" required :aria-invalid="Boolean(errores.aceptaEnvioDatos)" aria-describedby="error-aceptaEnvioDatos" @change="limpiarError('aceptaEnvioDatos')">
+                <label class="form-check-label" for="aceptaEnvioDatos">
+                  Acepto el envío de mis datos al instalador de mi provincia.
+                </label>
+                <small v-if="errores.aceptaEnvioDatos" id="error-aceptaEnvioDatos" class="d-block text-danger" role="alert">{{ errores.aceptaEnvioDatos }}</small>
+              </div>
+
+              <!-- El estado de envío desactiva el botón y muestra una etiqueta de progreso. -->
+              <button class="btn btn-primary align-self-start" type="submit" :disabled="enviando || cargandoFranjas || franjas.length === 0">
+                {{ enviando ? "Enviando…" : "Solicitar visita" }}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
       <chat-component></chat-component>
@@ -41,6 +181,7 @@
 
   <!-- Componentes -->
   <script src="../assets/js/services/sesion.js"></script>
+  <script src="../assets/js/services/solicitud.js"></script>
   <script src="../assets/js/components/Header.js"></script>
   <script src="../assets/js/components/Footer.js"></script>
   <script src="../assets/js/components/Chat.js"></script>
