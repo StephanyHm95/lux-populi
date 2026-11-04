@@ -7,8 +7,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY backend/ ./backend/
-COPY frontend/pages/ ./backend/public/
-COPY frontend/assets/ ./backend/public/assets/
+# Conserva pages/ y assets/ en la ruta frontend que sirve backend/server.js.
+COPY frontend/ ./frontend/
 
 EXPOSE 3000
 CMD ["node", "backend/server.js"]
