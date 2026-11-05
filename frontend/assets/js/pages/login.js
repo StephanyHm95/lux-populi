@@ -47,6 +47,7 @@ const app = Vue.createApp({
         this.codigoPostalRetorno = parametros.get("cp") || "";
     },
     methods: {
+        enlacePagina,
         limpiarError(campo) {
             // Limpia los mensajes cuando la persona vuelve a editar el formulario.
             delete this.errores[campo];

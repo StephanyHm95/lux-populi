@@ -28,7 +28,8 @@ const app = Vue.createApp({
             cargando: true,
             cargandoFranjas: false,
             enviando: false,
-            solicitudCreada: false
+            solicitudCreada: false,
+            cuentaCreadaSinSolicitud: false
         };
     },
     computed: {
@@ -63,19 +64,15 @@ const app = Vue.createApp({
         formatearFranja,
         async inicializar() {
             try {
-                // Recupera la simulación y el código postal que se pasaron desde la calculadora.
+                // Recupera la simulación opcional desde la URL.
                 const parametros = new URLSearchParams(window.location.search);
                 const simulacionId = Number(parametros.get("simulacion"));
                 this.simulacionId = Number.isInteger(simulacionId) ? simulacionId : null;
                 this.codigoPostalSimulacion = parametros.get("cp") || "";
                 this.formulario.codigoPostal = this.codigoPostalSimulacion;
 
-                if (!this.tieneSimulacion) {
-                    return;
-                }
-
-                // Evita iniciar una solicitud con un código postal inválido.
-                if (!validarCodigoPostal(this.codigoPostalSimulacion)) {
+                // El código postal solo es necesario cuando se inicia una solicitud.
+                if (this.tieneSimulacion && !validarCodigoPostal(this.codigoPostalSimulacion)) {
                     this.errorGeneral = "El código postal de la simulación no es válido. Vuelve a realizarla.";
                     return;
                 }
@@ -98,6 +95,10 @@ const app = Vue.createApp({
                     )
                 ) {
                     throw new Error("La respuesta de sesión no tiene el formato esperado.");
+                }
+
+                if (!this.tieneSimulacion) {
+                    return;
                 }
 
                 if (this.esAdmin) {
@@ -132,6 +133,16 @@ const app = Vue.createApp({
                 this.cargandoFranjas = false;
             }
         },
+        async volverAConsultarFranjas() {
+            this.errorGeneral = "";
+            try {
+                await this.cargarFranjas();
+            } catch (error) {
+                this.errorGeneral = error.response?.data?.error
+                    || error.message
+                    || "No se pudieron consultar los huecos. Inténtalo de nuevo.";
+            }
+        },
         limpiarError(campo) {
             // Quita el error del campo editado y limpia el mensaje general anterior.
             delete this.errores[campo];
@@ -163,6 +174,52 @@ const app = Vue.createApp({
                 if (!formulario.aceptaPrivacidad) {
                     this.errores.aceptaPrivacidad = "Debes aceptar la política de privacidad.";
                 }
+            }
+        },
+        validarSoloCuenta() {
+            this.errores = {};
+            this.errorGeneral = "";
+            this.validarDatosPersonales();
+            return Object.keys(this.errores).length === 0;
+        },
+        async registrarCuentaApi() {
+            const usuario = await crearCuentaCliente({
+                nombre: this.formulario.nombre.trim(),
+                apellidos: this.formulario.apellidos.trim(),
+                email: this.formulario.email.trim(),
+                telefono: this.formulario.telefono.trim(),
+                password: this.formulario.password,
+                password2: this.formulario.password2,
+                aceptaPrivacidad: this.formulario.aceptaPrivacidad
+            });
+
+            if (
+                !usuario
+                || !Number.isInteger(usuario.id)
+                || typeof usuario.nombre !== "string"
+                || usuario.rol !== "cliente"
+            ) {
+                throw new Error("La respuesta del registro no tiene el formato esperado.");
+            }
+
+            this.usuario = usuario;
+            window.dispatchEvent(new CustomEvent("lux-populi:usuario-autenticado", {
+                detail: usuario
+            }));
+        },
+        async crearCuentaSinSolicitud() {
+            if (this.enviando || this.haySesion || !this.validarSoloCuenta()) {
+                return;
+            }
+
+            this.enviando = true;
+            try {
+                await this.registrarCuentaApi();
+                this.cuentaCreadaSinSolicitud = true;
+            } catch (error) {
+                this.aplicarErrorApi(error);
+            } finally {
+                this.enviando = false;
             }
         },
         validarDireccion() {
@@ -225,16 +282,7 @@ const app = Vue.createApp({
             try {
                 // Los visitantes crean primero su cuenta; la respuesta deja la sesión iniciada.
                 if (!this.haySesion) {
-                    const respuestaRegistro = await crearCuentaCliente({
-                        nombre: this.formulario.nombre.trim(),
-                        apellidos: this.formulario.apellidos.trim(),
-                        email: this.formulario.email.trim(),
-                        telefono: this.formulario.telefono.trim(),
-                        password: this.formulario.password,
-                        password2: this.formulario.password2,
-                        aceptaPrivacidad: this.formulario.aceptaPrivacidad
-                    });
-                    this.usuario = respuestaRegistro;
+                    await this.registrarCuentaApi();
                 }
 
                 // Con la sesión disponible, crea la solicitud y navega a mi-solicitud.
