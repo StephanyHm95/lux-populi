@@ -1,18 +1,19 @@
-/* Sustituir los mocks por las rutas 12 y 16 cuando estén disponibles.
 
+// Ruta 12: Obtener franjas libres
 async function obtenerFranjasLibres(provincia) {
     const respuesta = await api.get("/franjas/libres", { params: { provincia } });
     return respuesta.data;
 }
 
+// Ruta 16: Crear solicitud
 async function crearSolicitud(datos) {
     const respuesta = await api.post("/solicitudes", datos);
     return respuesta.data;
 }
 
-*/
 
 
+/* 
 // Respuestas de ejemplo de las rutas 12 y 16.
 const franjasLibresMock = [
     { id: 4, fecha: "2026-11-12", horaInicio: "10:00", horaFin: "12:00", provincia: "08" },
@@ -57,3 +58,4 @@ async function crearSolicitud(datos) {
     franjasLibresMock.splice(indiceFranja, 1);
     return { id: 7, estado: "solicitada" };
 }
+ */

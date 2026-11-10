@@ -19,7 +19,11 @@ app.use(session({
 }));
 
 //Frontend de Rosalia
-app.use(express.static(path.join(__dirname, "public")));
+//Las páginas están en frontend/pages, se añade una redirección a index.html.
+app.use(express.static(path.join(__dirname, "..", "frontend")));
+app.get("/", (req, res) => {
+    res.redirect("/pages/index.html");
+});
 
 //rutas de la api
 app.use("/api/auth", require("./rutas/auth"));

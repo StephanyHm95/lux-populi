@@ -24,11 +24,33 @@ const HeaderComponent = {
   },
   // Comprueba la sesión al crear la cabecera para mostrar la navegación adecuada.
   created() {
+    window.addEventListener("lux-populi:usuario-autenticado", this.actualizarUsuario);
     this.cargarUsuario();
+  },
+  beforeUnmount() {
+    window.removeEventListener("lux-populi:usuario-autenticado", this.actualizarUsuario);
   },
   methods: {
     // Hace disponible la función compartida de rutas en la plantilla.
     enlacePagina,
+
+    // Actualiza la cabecera cuando el registro inicia una sesión sin recargar la página.
+    actualizarUsuario(evento) {
+      const usuario = evento.detail;
+      if (
+        !usuario
+        || !Number.isInteger(usuario.id)
+        || typeof usuario.nombre !== "string"
+        || !["cliente", "admin"].includes(usuario.rol)
+      ) {
+        this.errorSesion = "No se pudo actualizar la sesión.";
+        return;
+      }
+
+      this.usuario = usuario;
+      this.errorSesion = "";
+      this.cargando = false;
+    },
 
     // Consulta quién inició sesión y valida la estructura de la respuesta.
     async cargarUsuario() {

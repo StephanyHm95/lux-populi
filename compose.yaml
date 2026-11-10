@@ -30,6 +30,10 @@ services:
       DB_PUERTO: "3306"
     ports:
       - "${PUERTO_PUBLICO:-3000}:3000"
+    # Sincroniza el código local para reflejar cambios sin reconstruir la imagen.
+    volumes:
+      - ./backend:/opt/luxpopuli/backend
+      - ./frontend:/opt/luxpopuli/frontend
     depends_on:
       db:
         condition: service_healthy

@@ -1,12 +1,11 @@
-/*
- * Cuando esté disponible la ruta 5, sustituir el mock por:
- *
- * async function crearSimulacion(datos) {
- *     const respuesta = await api.post("/simulaciones", datos);
- *     return respuesta.data;
- * }
- */
+// Ruta 5: Crear simulación
+async function crearSimulacion(datos) {
+    const respuesta = await api.post("/simulaciones", datos);
+    return respuesta.data;
+}
+ 
 
+/* 
 // Mock ruta 5
 async function crearSimulacion(datos) {
     return {
@@ -25,3 +24,4 @@ async function crearSimulacion(datos) {
         produccionMensual: [231, 242, 309, 319, 354, 355, 368, 350, 297, 257, 215, 212]
     };
 }
+*/
