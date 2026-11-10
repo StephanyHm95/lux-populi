@@ -4,6 +4,8 @@ set -Eeuo pipefail
 # Despliegue inicial de LuxPopuli en Ubuntu, Debian o Linux Mint.
 REPO_URL="https://github.com/StephanyHm95/lux-populi.git"
 DEPLOY_DIR="${LUXPOPULI_DIR:-$HOME/LuxPopuli}"
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-luxpopuli}"
+export COMPOSE_PROJECT_NAME
 
 say() { printf '\n[LuxPopuli] %s\n' "$*"; }
 fail() { printf '\n[ERROR] %s\n' "$*" >&2; exit 1; }
@@ -66,7 +68,22 @@ else
     git clone "$REPO_URL" "$PROJECT_DIR"
   else
     [[ -f "$PROJECT_DIR/backend/server.js" && -f "$PROJECT_DIR/database/luxpopuli.sql" ]] || fail "El directorio $PROJECT_DIR no contiene la estructura esperada."
-    say "Se usará el repositorio existente sin descargar actualizaciones."
+    say "Comprobando actualizaciones del repositorio..."
+    git -C "$PROJECT_DIR" fetch --quiet origin main ||
+      fail "No se pudieron comprobar las actualizaciones de GitHub."
+
+    if [[ -n "$(git -C "$PROJECT_DIR" status --porcelain)" ]]; then
+      fail "Hay modificaciones locales en el repositorio. No se actualizará automáticamente."
+    fi
+
+    LOCAL_COMMIT="$(git -C "$PROJECT_DIR" rev-parse HEAD)"
+    REMOTE_COMMIT="$(git -C "$PROJECT_DIR" rev-parse origin/main)"
+
+    if [[ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]]; then
+      fail "Hay una versión diferente en GitHub. Revisa el repositorio antes de actualizarlo."
+    fi
+
+    say "El repositorio ya está actualizado."
   fi
 fi
 
@@ -85,7 +102,7 @@ DB_CONTRASENA=$(openssl rand -hex 24)
 DB_NOMBRE=luxpopuli
 SESION_SECRETO=$(openssl rand -hex 32)
 PUERTO=3000
-PUERTO_PUBLICO=3000
+PUERTO_PUBLICO=${PUERTO_PUBLICO:-3000}
 MYSQL_ROOT_PASSWORD=$(openssl rand -hex 24)
 ENVEOF
   chmod 600 .env
@@ -103,26 +120,39 @@ if docker info >/dev/null 2>&1; then
 else
   DOCKER=(sudo docker)
 fi
-"${DOCKER[@]}" compose up -d --build --wait --wait-timeout 300
+"${DOCKER[@]}" compose -p "$COMPOSE_PROJECT_NAME" up -d --build --wait --wait-timeout 300
 
 say "Comprobando que la aplicación responde..."
 for intento in {1..30}; do
-  if curl --fail --silent --show-error \
+  if curl --fail --location --silent --show-error \
       "http://127.0.0.1:${PUERTO_PUBLICO}/" \
       --output /dev/null 2>/dev/null; then
     break
   fi
   if [[ "$intento" -eq 30 ]]; then
     say "La aplicación no respondió. Estos son los registros:"
-    "${DOCKER[@]}" compose ps -a
-    "${DOCKER[@]}" compose logs --tail=100 app db
+    "${DOCKER[@]}" compose -p "$COMPOSE_PROJECT_NAME" ps -a
+    "${DOCKER[@]}" compose -p "$COMPOSE_PROJECT_NAME" logs --tail=100 app db
     fail "El despliegue no se ha completado correctamente."
   fi
   sleep 2
 done
 
+say "Comprobando el chatbot..."
+RESPUESTA_CHAT="$(curl --fail --silent --show-error \
+  --max-time 20 \
+  -X POST "http://127.0.0.1:${PUERTO_PUBLICO}/api/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"mensaje":"¿Qué porcentajes de deducción existen en 2026?","historial":[]}' \
+  )" || fail "El chatbot no responde correctamente."
+
+if [[ "$RESPUESTA_CHAT" != *'"respuesta"'* ]]; then
+  fail "El chatbot respondió, pero no devolvió el formato esperado."
+fi
+
+say "Chatbot operativo."
 say "Estado de los servicios:"
-"${DOCKER[@]}" compose ps
+"${DOCKER[@]}" compose -p "$COMPOSE_PROJECT_NAME" ps
 
 printf '\nDespliegue finalizado.\n'
 printf 'En esta máquina: http://localhost:%s\n' "$PUERTO_PUBLICO"
@@ -132,6 +162,6 @@ if [[ -n "${LAN_IP:-}" ]]; then
   printf 'En la red local: http://%s:%s\n' "$LAN_IP" "$PUERTO_PUBLICO"
 fi
 
-printf 'Registros: cd "%s" && %s compose logs -f\n' \
-  "$PROJECT_DIR" "$( [[ ${DOCKER[0]} == sudo ]] && printf 'sudo docker' || printf 'docker' )"
+printf 'Registros: cd "%s" && %s compose -p "%s" logs -f\n' \
+  "$PROJECT_DIR" "$( [[ ${DOCKER[0]} == sudo ]] && printf 'sudo docker' || printf 'docker' )" "$COMPOSE_PROJECT_NAME"
 printf 'La base de datos persiste en el volumen Docker datos_mysql.\n'

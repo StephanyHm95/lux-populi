@@ -1,0 +1,102 @@
+{
+  "id": "ES-IRPF-AUTOCONSUMO-2026",
+  "titulo": "Deducción estatal por instalación de sistemas de autoconsumo renovable",
+  "categoria": "deduccion_fiscal",
+  "impuesto": "IRPF",
+  "ambito": "España",
+  "ejercicio_fiscal": 2026,
+  "requisitos": [
+    "El inmueble debe ser propiedad del contribuyente.",
+    "La instalación debe realizarse y finalizar en 2026.",
+    "Las cantidades deben pagarse durante 2026.",
+    "Se deben disponer de las autorizaciones y permisos exigibles, incluido el Certificado de Instalación Eléctrica.",
+    "El pago debe efectuarse mediante medios bancarios admitidos, nunca en efectivo."
+  ],
+  "gastos_incluidos": [
+    "Equipos y materiales necesarios para la instalación.",
+    "Gastos de instalación de los equipos.",
+    "Obras necesarias para llevar a cabo la instalación."
+  ],
+  "incompatibilidades": [
+    "No se pueden aplicar simultáneamente los porcentajes del 10 y del 20 por la misma instalación.",
+    "Las cantidades subvencionadas con ayudas públicas no forman parte de la base deducible.",
+    "No es compatible con las deducciones estatales por mejora de eficiencia energética para la misma instalación en el mismo inmueble."
+  ],
+  "exclusiones": [
+    "Instalaciones afectas a actividades económicas.",
+    "Si una instalación inicialmente no afecta a una actividad económica se destina posteriormente a dicha actividad, se pierde el derecho a la deducción practicada."
+  ],
+  "fuente": {
+    "organismo": "Agencia Tributaria",
+    "url": "https://sede.agenciatributaria.gob.es/Sede/irpf/novedades-impuesto/novedades-normativa-2026/principales-novedades-tributarias-introducidas-real-marzo.html",
+    "normativa": "Real Decreto-ley 7/2026, artículo 36, apartado Tres; disposición adicional sexagésima segunda de la Ley 35/2006 del IRPF",
+    "url_boe": "https://www.boe.es/buscar/act.php?id=BOE-A-2026-6544"
+  },
+  "fecha_revision": "2026-11-10",
+  "estado": "validado",
+  "modalidades": [
+    {
+      "porcentaje": 10,
+      "condicion": "Instalación de sistemas de autoconsumo renovable en un inmueble propiedad del contribuyente.",
+      "requisitos_verificables": {
+        "inmueble_propiedad": true,
+        "instalacion_autoconsumo_renovable": true
+      }
+    },
+    {
+      "porcentaje": 20,
+      "condicion": "El contribuyente debe ser propietario de una vivienda ubicada en un edificio de uso predominantemente residencial en el que se haya realizado la instalación de autoconsumo renovable durante 2026, cumpliendo los demás requisitos legales.",
+      "requisitos_verificables": {
+        "inmueble_propiedad": true,
+        "instalacion_autoconsumo_renovable": true,
+        "vivienda_edificio_residencial": true
+      }
+    }
+  ],
+  "vigencia": {
+    "ejercicios_aplicables": [
+      2026
+    ],
+    "fecha_entrada_vigor_norma": "2026-03-22",
+    "fecha_efectos_fiscales": "2026-01-01",
+    "pendiente_verificacion": false,
+    "inicio_periodo_instalaciones_pagos": "2026-01-01",
+    "fin_periodo_instalaciones_pagos": "2026-12-31"
+  },
+  "aplicacion_fiscal": {
+    "impuesto": "IRPF",
+    "cuota": "cuota íntegra estatal",
+    "periodo_aplicacion": "Ejercicio fiscal en el que finalice la instalación",
+    "orden": "Después de las deducciones previstas en los apartados 1 a 5 del artículo 68 de la Ley del IRPF"
+  },
+  "calculo": {
+    "base_maxima_anual_euros": 5000,
+    "excluir_importes_subvencionados": true,
+    "porcentajes_segun_modalidad": [
+      10,
+      20
+    ],
+    "importe_final_dependiente_de_requisitos": true
+  },
+  "documentacion": {
+    "exigida_por_normativa": [
+      "Certificado de Instalaciones Eléctricas (CIE).",
+      "Autorizaciones y permisos exigibles según la legislación vigente."
+    ],
+    "justificantes_recomendados": [
+      "Facturas de los equipos, materiales y trabajos realizados.",
+      "Justificantes de pago mediante los medios bancarios admitidos.",
+      "Documentación de las ayudas públicas concedidas, cuando corresponda."
+    ]
+  },
+  "medios_pago": {
+    "admitidos": [
+      "Tarjeta de crédito",
+      "Tarjeta de débito",
+      "Transferencia bancaria",
+      "Cheque nominativo",
+      "Ingreso en cuenta en entidad de crédito"
+    ],
+    "efectivo_admitido": false
+  }
+}

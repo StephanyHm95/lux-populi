@@ -18,7 +18,7 @@ services:
       start_period: 120s
 
   app:
-    image: luxpopuli:local
+    image: luxpopuli-web:local
     build:
       context: .
       dockerfile: Dockerfile
@@ -28,15 +28,32 @@ services:
     environment:
       DB_HOST: db
       DB_PUERTO: "3306"
+      IA_URL: http://ia:8000
     ports:
       - "${PUERTO_PUBLICO:-3000}:3000"
-    # Sincroniza el código local para reflejar cambios sin reconstruir la imagen.
-    volumes:
-      - ./backend:/opt/luxpopuli/backend
-      - ./frontend:/opt/luxpopuli/frontend
     depends_on:
       db:
         condition: service_healthy
+      ia:
+        condition: service_healthy
+
+
+  ia:
+    build:
+      context: ./ia
+      dockerfile: Dockerfile
+    image: luxpopuli-ia:local
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
 volumes:
   datos_mysql:

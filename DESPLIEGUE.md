@@ -41,3 +41,34 @@ docker compose start
 
 En algunos equipos puede ser necesario anteponer `sudo` a los comandos Docker.
 
+
+## Servicios incluidos
+
+El despliegue utiliza tres contenedores:
+
+- app: servidor Node.js, Express y frontend Vue.
+- db: base de datos MySQL 8.
+- ia: servicio FastAPI del chatbot documental.
+
+El chatbot funciona con respuestas predefinidas y fichas documentales.
+Actualmente no ejecuta un modelo de lenguaje generativo.
+
+## Integración del chatbot
+
+La interfaz utiliza POST /api/chat.
+
+El archivo integraciones/chat.js se incorpora durante la construcción
+de la imagen Docker, sin modificar los archivos originales del backend
+ni del frontend.
+
+El servicio IA se comunica internamente con Node.js.
+Su puerto 8000 no se publica al exterior.
+
+## Instalación independiente de evaluación
+
+Para ejecutar otra instancia sin compartir contenedores ni datos:
+
+    COMPOSE_PROJECT_NAME=luxpopuli-evaluacion bash despliegue.sh
+
+El puerto público se configura en .env mediante PUERTO_PUBLICO.
+Si ya existe un despliegue en el puerto 3000, debe elegirse otro.
