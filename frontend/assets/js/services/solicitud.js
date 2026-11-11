@@ -11,6 +11,39 @@ async function crearSolicitud(datos) {
     return respuesta.data;
 }
 
+// Ruta 17: Consultar la solicitud más reciente del cliente.
+async function obtenerSolicitudMia() {
+    const respuesta = await api.get("/solicitudes/mia");
+    return respuesta.data;
+}
+
+// Ruta 18: Cambiar la franja de una solicitud propia.
+async function cambiarFranjaSolicitud(id, datos) {
+    const respuesta = await api.put(`/solicitudes/${id}/franja`, datos);
+    return respuesta.data;
+}
+
+// Ruta 19: Cancelar una solicitud propia.
+async function cancelarSolicitudApi(id) {
+    const respuesta = await api.put(`/solicitudes/${id}/cancelar`);
+    return respuesta.data;
+}
+
+// Ruta 20: Aceptar o rechazar el presupuesto.
+async function responderPresupuestoApi(id, datos) {
+    const respuesta = await api.put(`/solicitudes/${id}/respuesta`, datos);
+    return respuesta.data;
+}
+
+// Ruta 21: Descargar presupuesto en PDF
+async function descargarPresupuestoApi(id) {
+    const respuesta = await api.get(`/solicitudes/${id}/presupuesto`, {
+        responseType: "blob"
+    });
+    return respuesta.data;
+}
+
+
 
 
 /* 

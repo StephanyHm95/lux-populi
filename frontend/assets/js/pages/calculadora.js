@@ -175,6 +175,11 @@ const app = Vue.createApp({
             try {
                 // Espera la respuesta del servicio, que devuelve los resultados de la simulación.
                 this.resultado = await crearSimulacion(this.formulario);
+                try {
+                    guardarSimulacionParaRegistro(this.resultado, this.formulario);
+                } catch (error) {
+                    this.errorCalculo = `La simulación se calculó, pero no se pudo guardar para mostrarla en tu área privada. ${error.message}`;
+                }
             } catch (error) {
                 // Prioriza el mensaje del backend y usa alternativas si no está disponible.
                 this.errorCalculo = error.response?.data?.error

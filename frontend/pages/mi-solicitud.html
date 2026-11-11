@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi solicitud</title>
+  <title>Mi solicitud | Lux Populi</title>
 
   <!-- CSS -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
@@ -16,8 +16,323 @@
 
     <main class="container flex-grow-1 d-flex flex-column py-4 py-md-5">
       <div class="row g-4 flex-grow-1">
-        <div class="col-12">
-          <!-- contenido específico -->
+        <div class="col-12 lp-calculator">
+          <!-- Presentación y estados generales de carga, error y ausencia de solicitud. -->
+          <section aria-labelledby="solicitud-title" class="lp-calculator__intro">
+            <h1 id="solicitud-title">Mi solicitud</h1>
+            <p v-if="usuario">
+              Hola, {{ usuario.nombre }}.
+              {{ registroConfirmado ? "Aquí puedes consultar tu simulación y solicitar una visita cuando quieras." : "Aquí puedes consultar el estado de tu visita y tu presupuesto." }}
+            </p>
+          </section>
+
+          <p v-if="cargando" class="alert alert-info" role="status" aria-live="polite">
+            Consultando tu solicitud…
+          </p>
+
+          <div v-if="!cargando">
+            <p v-if="errorGeneral" class="alert alert-danger" role="alert" aria-live="polite">
+              {{ errorGeneral }}
+            </p>
+            <p v-if="mensajeExito" class="alert alert-success" role="status" aria-live="polite">
+              {{ mensajeExito }}
+            </p>
+            <p v-if="registroConfirmado" class="alert alert-success" role="status" aria-live="polite">
+              Tu cuenta está creada.
+            </p>
+            <p v-if="sinSolicitud && errorSimulacionSinSolicitud" class="alert alert-warning" role="status" aria-live="polite">
+              {{ errorSimulacionSinSolicitud }}
+            </p>
+
+            <section v-if="sinSolicitud && !simulacionSinSolicitud" class="card p-3 p-md-4" aria-labelledby="sin-solicitud-title">
+              <h2 id="sin-solicitud-title" class="h4">Todavía no tienes ninguna solicitud</h2>
+              <p v-if="simulacionIdSinSolicitud">No se han podido recuperar los resultados de esta simulación. Puedes realizar otra para consultar sus resultados.</p>
+              <p v-else>Haz una simulación para conocer el ahorro estimado de tu instalación.</p>
+              <a class="btn btn-primary align-self-start" :href="enlacePagina('calculadora')">
+                {{ simulacionIdSinSolicitud ? "Realizar otra simulación" : "Ir a la calculadora" }}
+              </a>
+            </section>
+
+            <div v-if="solicitud || (sinSolicitud && simulacionSinSolicitud)">
+              <!-- Seguimiento del estado; la solicitud cancelada se comunica por separado. -->
+              <section
+                v-if="solicitud && solicitud.estado !== 'cancelada'"
+                class="mb-4"
+                aria-labelledby="seguimiento-title"
+                aria-live="polite"
+              >
+                <h2 id="seguimiento-title" class="h3">Seguimiento</h2>
+                <ol class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 list-unstyled">
+                  <li
+                    v-for="(paso, indice) in pasosSeguimiento"
+                    :key="indice"
+                    class="col"
+                    :aria-current="paso.actual ? 'step' : null"
+                  >
+                    <article
+                      class="lp-request-step card h-100 p-3"
+                      :class="{
+                        'lp-request-step--current': paso.actual,
+                        'lp-request-step--completed': paso.completado
+                      }"
+                    >
+                      <h3 class="h5 mb-2">{{ indice + 1 }}. {{ paso.etiqueta }}</h3>
+                      <span v-if="paso.actual" class="badge text-bg-success align-self-start">
+                        Estado actual
+                      </span>
+                      <span v-else-if="paso.completado" class="small fw-semibold">
+                        Completado
+                      </span>
+                      <span v-else class="small text-body-secondary">Pendiente</span>
+                    </article>
+                  </li>
+                </ol>
+              </section>
+
+              <p v-if="solicitud && solicitud.estado === 'cancelada'" class="alert alert-secondary" role="status">
+                Esta solicitud está cancelada.
+              </p>
+
+              <p v-if="solicitud && solicitud.estado === 'enviada'" class="alert alert-info" role="status">
+                Tu solicitud ya está en manos de un instalador de tu provincia. Te visitará el día y la hora que elegiste.
+              </p>
+
+              <!-- Datos de visita y acciones de modificación/cancelación permitidas por el servidor. -->
+              <section v-if="solicitud" class="card p-3 p-md-4 mb-4" aria-labelledby="visita-title">
+                <h2 id="visita-title" class="h3">Datos de la visita</h2>
+                <dl class="row mb-0">
+                  <dt class="col-sm-4">Fecha y hora</dt>
+                  <dd class="col-sm-8">{{ formatearFranja(solicitud.franja) }}</dd>
+                  <dt class="col-sm-4">Dirección</dt>
+                  <dd class="col-sm-8">{{ solicitud.direccion }}, {{ solicitud.municipio }}</dd>
+                  <dt class="col-sm-4">Código postal</dt>
+                  <dd class="col-sm-8">{{ solicitud.codigoPostal }}</dd>
+                  <dt class="col-sm-4">Provincia</dt>
+                  <dd class="col-sm-8">{{ solicitud.provincia }}</dd>
+                </dl>
+
+                <div v-if="solicitud.sePuedeModificar" class="d-flex flex-column flex-sm-row gap-2 mt-3">
+                  <button
+                    class="btn btn-outline-success"
+                    type="button"
+                    :aria-expanded="mostrarModificacion"
+                    aria-controls="modificar-franja"
+                    :disabled="Boolean(accionEnCurso)"
+                    @click="mostrarModificacion ? mostrarModificacion = false : abrirModificacion()"
+                  >
+                    {{ mostrarModificacion ? "Cerrar modificación" : "Modificar visita" }}
+                  </button>
+                  <button
+                    class="btn btn-outline-danger"
+                    type="button"
+                    :disabled="Boolean(accionEnCurso)"
+                    @click="cancelarSolicitud"
+                  >
+                    {{ accionEnCurso === "cancelar" ? "Cancelando…" : "Cancelar solicitud" }}
+                  </button>
+                </div>
+                <p v-if="solicitud.estado === 'enviada'" class="mb-0 mt-3">
+                  Para cambiar o anular la visita, llama a la empresa.
+                </p>
+              </section>
+
+              <section v-else class="card p-3 p-md-4 mb-4" aria-labelledby="visita-title">
+                <h2 id="visita-title" class="h3">Datos de la visita</h2>
+                <p class="alert alert-info mb-3" role="status" aria-live="polite">
+                  Aún no has solicitado una visita. Puedes consultar los huecos disponibles más adelante.
+                </p>
+                <a class="btn btn-outline-success align-self-start" :href="enlaceConsultarHuecos">
+                  Consultar huecos disponibles
+                </a>
+              </section>
+
+              <!-- Bloque desplegable: solo consulta huecos y guarda una nueva franja. -->
+              <section
+                v-if="solicitud && mostrarModificacion && solicitud.sePuedeModificar"
+                id="modificar-franja"
+                class="lp-calculator__form card p-3 p-md-4 mb-4"
+                aria-labelledby="modificar-title"
+              >
+                <h2 id="modificar-title" class="h3">Elige una nueva fecha</h2>
+                <p v-if="cargandoFranjas" role="status" aria-live="polite">Buscando huecos disponibles…</p>
+                <p v-else-if="franjas.length === 0" class="mb-0">
+                  Ahora mismo no hay huecos libres en tu provincia.
+                </p>
+                <fieldset v-else class="lp-calculator__fieldset">
+                  <legend>Huecos disponibles</legend>
+                  <div
+                    v-for="franja in franjas"
+                    :key="franja.id"
+                    class="form-check"
+                  >
+                    <input
+                      :id="`franja-${franja.id}`"
+                      v-model="franjaSeleccionada"
+                      class="form-check-input"
+                      :class="{ 'is-invalid': Boolean(errores.franjaId) }"
+                      type="radio"
+                      name="franjaId"
+                      :value="String(franja.id)"
+                      :aria-invalid="Boolean(errores.franjaId)"
+                      :aria-describedby="errores.franjaId ? 'error-franjaId' : null"
+                      @change="limpiarError('franjaId')"
+                    >
+                    <label class="form-check-label" :for="`franja-${franja.id}`">
+                      {{ formatearFranja(franja) }}
+                    </label>
+                  </div>
+                  <small v-if="errores.franjaId" id="error-franjaId" class="d-block text-danger" role="alert">
+                    {{ errores.franjaId }}
+                  </small>
+                </fieldset>
+                <button
+                  v-if="franjas.length > 0"
+                  class="btn btn-primary align-self-start"
+                  type="button"
+                  :disabled="Boolean(accionEnCurso) || cargandoFranjas"
+                  @click="modificarFranja"
+                >
+                  {{ accionEnCurso === "modificar" ? "Guardando…" : "Guardar nueva fecha" }}
+                </button>
+              </section>
+
+              <!-- Resumen de valores devueltos por la simulación original. -->
+              <section class="mb-4" aria-labelledby="simulacion-title">
+                <h2 id="simulacion-title" class="h3">Mi simulación</h2>
+                <p v-if="simulacionActual.tejadoLimita" class="alert alert-info" role="status">
+                  La superficie del tejado limita el número de paneles de la instalación.
+                </p>
+                <dl class="row g-3">
+                  <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>Instalación</dt>
+                      <dd class="mb-0">{{ esEdificio ? "Edificio" : "Vivienda" }}</dd>
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>Tejado</dt>
+                      <dd class="mb-0">{{ simulacionActual.tipoTejado === "inclinado" ? "Inclinado" : "Plano" }}</dd>
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>Superficie</dt>
+                      <dd class="mb-0">{{ formatearNumero(simulacionActual.superficie) }} m²</dd>
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>Paneles</dt>
+                      <dd class="mb-0">{{ formatearNumero(simulacionActual.panelesFinales) }}</dd>
+                    </div>
+                  </div>
+                  <div v-if="typeof simulacionActual.produccionAnual === 'number'" class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>Producción anual</dt>
+                      <dd class="mb-0">{{ formatearNumero(simulacionActual.produccionAnual) }} kWh</dd>
+                    </div>
+                  </div>
+                  <div v-if="typeof simulacionActual.radiacionAnual === 'number'" class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>Radiación anual</dt>
+                      <dd class="mb-0">{{ formatearNumero(simulacionActual.radiacionAnual) }} kWh/m²</dd>
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>Potencia instalada</dt>
+                      <dd class="mb-0">{{ formatearNumero(simulacionActual.potenciaInstalada) }} kWp</dd>
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>Amortización estimada</dt>
+                      <dd class="mb-0">{{ formatearNumero(simulacionActual.amortizacion) }} años</dd>
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>{{ esEdificio ? "Coste total" : "Coste estimado" }}</dt>
+                      <dd class="mb-0">{{ formatearEuros(simulacionActual.coste) }}</dd>
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>{{ esEdificio ? "Ahorro anual total" : "Ahorro anual estimado" }}</dt>
+                      <dd class="mb-0">{{ formatearEuros(simulacionActual.ahorroAnual) }}</dd>
+                    </div>
+                  </div>
+                  <div v-if="esEdificio" class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>Coste por vivienda</dt>
+                      <dd class="mb-0">{{ formatearEuros(simulacionActual.costePorVivienda) }}</dd>
+                    </div>
+                  </div>
+                  <div v-if="esEdificio" class="col-12 col-sm-6 col-lg-4">
+                    <div class="lp-calculator__result-card card p-3">
+                      <dt>Ahorro anual por vivienda</dt>
+                      <dd class="mb-0">{{ formatearEuros(simulacionActual.ahorroPorVivienda) }}</dd>
+                    </div>
+                  </div>
+                </dl>
+                <p class="mt-3 mb-0">Estimación orientativa, no vinculante.</p>
+              </section>
+
+              <!-- El bloque permanece visible durante todo el seguimiento de la solicitud. -->
+              <section class="card p-3 p-md-4 mb-4" aria-labelledby="presupuesto-title">
+                <h2 id="presupuesto-title" class="h3">Presupuesto del instalador</h2>
+                <p v-if="!solicitud && simulacionSinSolicitud" class="mb-0">
+                  Pendiente de solicitar una visita para que un instalador pueda acudir a presupuestar.
+                </p>
+                <p v-else-if="solicitud.presupuesto === null" class="mb-0">
+                  Pendiente de recibir el presupuesto
+                </p>
+                <template v-else>
+                  <p>Importe: <strong>{{ formatearEuros(solicitud.presupuesto.importe) }}</strong></p>
+                  <div class="d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center gap-2">
+                    <button
+                      class="btn btn-outline-success"
+                      type="button"
+                      :disabled="Boolean(accionEnCurso)"
+                      @click="descargarPresupuesto"
+                    >
+                      {{ accionEnCurso === "descargar" ? "Descargando…" : "Descargar PDF" }}
+                    </button>
+                    <template v-if="solicitud.estado === 'presupuesto_enviado'">
+                      <div class="d-flex flex-column flex-sm-row justify-content-sm-end gap-2">
+                        <button
+                          class="btn btn-success"
+                          type="button"
+                          :disabled="Boolean(accionEnCurso)"
+                          @click="responderPresupuesto('aceptado')"
+                        >
+                          {{ accionEnCurso === "aceptado" ? "Enviando…" : "Aceptar" }}
+                        </button>
+                        <button
+                          class="btn btn-outline-danger"
+                          type="button"
+                          :disabled="Boolean(accionEnCurso)"
+                          @click="responderPresupuesto('rechazado')"
+                        >
+                          {{ accionEnCurso === "rechazado" ? "Enviando…" : "Rechazar" }}
+                        </button>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <p
+                  v-if="solicitud && ['aceptado', 'rechazado', 'cancelada'].includes(solicitud.estado)"
+                  class="mt-4 mb-0"
+                >
+                  <a class="btn btn-primary" :href="enlacePagina('calculadora')">
+                    Hacer una nueva simulación
+                  </a>
+                </p>
+              </section>
+            </div>
+          </div>
         </div>
       </div>
       <chat-component></chat-component>
@@ -26,7 +341,7 @@
     <footer-component></footer-component>
   </div>
 
- <!-- JS -->
+ <!-- Dependencias compartidas y utilidades cargadas antes de los componentes y la página. -->
   <script src="../assets/js/bootstrap.bundle.min.js"></script>
   <script src="../assets/js/vue.global.js"></script>
   <script src="../assets/js/axios.min.js"></script>
@@ -41,9 +356,11 @@
 
   <!-- Componentes -->
   <script src="../assets/js/services/sesion.js"></script>
+  <script src="../assets/js/services/simulacion.js"></script>
   <script src="../assets/js/components/Header.js"></script>
   <script src="../assets/js/components/Footer.js"></script>
   <script src="../assets/js/components/Chat.js"></script>
+  <script src="../assets/js/services/solicitud.js"></script>
 
   <!-- Página -->
   <script src="../assets/js/pages/mi-solicitud.js"></script>

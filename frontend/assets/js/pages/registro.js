@@ -23,13 +23,14 @@ const app = Vue.createApp({
                 aceptaEnvioDatos: false
             },
             franjas: [],
+            franjasCargadas: false,
             errores: {},
             errorGeneral: "",
             cargando: true,
             cargandoFranjas: false,
             enviando: false,
             solicitudCreada: false,
-            cuentaCreadaSinSolicitud: false
+            mostrarFormularioCuentaSinSolicitud: false
         };
     },
     computed: {
@@ -125,6 +126,8 @@ const app = Vue.createApp({
                     throw new Error("La respuesta de huecos disponibles no tiene el formato esperado.");
                 }
 
+                this.franjasCargadas = true;
+
                 // Deselecciona el hueco si ya no aparece entre los disponibles.
                 if (!this.franjas.some(franja => String(franja.id) === String(this.formulario.franjaId))) {
                     this.formulario.franjaId = "";
@@ -215,12 +218,20 @@ const app = Vue.createApp({
             this.enviando = true;
             try {
                 await this.registrarCuentaApi();
-                this.cuentaCreadaSinSolicitud = true;
+                const parametros = new URLSearchParams({ registro: "creada" });
+                if (this.tieneSimulacion) {
+                    parametros.set("simulacion", String(this.simulacionId));
+                    parametros.set("cp", this.codigoPostalSimulacion);
+                }
+                window.location.assign(`${enlacePagina("miSolicitud")}?${parametros}`);
             } catch (error) {
                 this.aplicarErrorApi(error);
             } finally {
                 this.enviando = false;
             }
+        },
+        mostrarRegistroSinSolicitud() {
+            this.mostrarFormularioCuentaSinSolicitud = true;
         },
         validarDireccion() {
             // Comprueba la dirección y que el código postal corresponda a la provincia simulada.

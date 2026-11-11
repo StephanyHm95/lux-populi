@@ -9,7 +9,7 @@ function formatearEuros(valor) {
 function formatearNumero(valor) {
     return new Intl.NumberFormat("es-ES", {
         useGrouping: "always",
-        maximumFractionDigits: 20
+        maximumFractionDigits: 2
     }).format(valor);
 }
 

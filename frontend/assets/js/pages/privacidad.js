@@ -3,6 +3,17 @@ console.log("Privacidad.js cargado correctamente.");
 const app = Vue.createApp({
     data() {
         return {};
+    },
+    methods: {
+        volverAtras() {
+            const referrer = document.referrer;
+            if (referrer && new URL(referrer).origin === window.location.origin) {
+                window.history.back();
+                return;
+            }
+
+            window.location.assign(enlacePagina("inicio"));
+        }
     }
 });
 
