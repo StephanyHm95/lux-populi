@@ -10,6 +10,22 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "El mensaje debe contener entre 1 y 500 caracteres." });
   }
 
+  const historial = req.body?.historial ?? [];
+
+  if (
+    !Array.isArray(historial) ||
+    historial.length > 10 ||
+    !historial.every(item =>
+      item &&
+      typeof item === "object" &&
+      ["usuario", "asistente"].includes(item.rol) &&
+      typeof item.texto === "string" &&
+      item.texto.length <= 5000
+    )
+  ) {
+    return res.status(400).json({ error: "Historial de conversación no válido." });
+  }
+
   try {
     const respuesta = await fetch(`${IA_URL}/chat`, {
       method: "POST",
@@ -17,6 +33,7 @@ router.post("/", async (req, res) => {
       signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
         pregunta: mensaje.trim(),
+        historial,
         categoria: "deduccion_fiscal",
         ambito: "España",
         fecha_referencia: new Date().toISOString().slice(0, 10)

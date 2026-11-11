@@ -1,4 +1,5 @@
 import unicodedata
+import re
 
 def normalizar(texto):
     texto = unicodedata.normalize("NFD", texto.lower())
@@ -10,6 +11,17 @@ def responder_directamente(pregunta, fichas):
 
     pregunta = normalizar(pregunta)
     ficha = fichas[0]
+
+    anios_pregunta = {
+        int(anio) for anio in re.findall(r"(?<!\d)(?:19|20)\d{2}(?!\d)", pregunta)
+    }
+    anios_validos = set(
+        ficha.get("vigencia", {}).get("ejercicios_aplicables", [])
+    )
+
+    if anios_pregunta and not anios_pregunta.issubset(anios_validos):
+        return None
+
     calculo = ficha.get("calculo", {})
     fuente = ficha.get("fuente", {}).get("url_boe", "")
 
@@ -17,12 +29,15 @@ def responder_directamente(pregunta, fichas):
         "porcentaje",
         "cuanto desgrava",
         "cuanto puedo deducir",
-        "tipos de deduccion", "que deduccion", "que deducciones", "deduccion fiscal", "deducciones fiscales", "desgravacion fiscal",
+        "tipos de deduccion",
         "que deduccion",
         "que deducciones",
         "deduccion fiscal",
         "deducciones fiscales",
         "desgravacion fiscal",
+        "puedo desgravar",
+        "puedo deducir",
+        "desgravar la instalacion",
     )):
         porcentajes = calculo.get("porcentajes_segun_modalidad", [])
         modalidades = ficha.get("modalidades", [])
