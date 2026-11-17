@@ -93,6 +93,7 @@ const HeaderComponent = {
 
         this.usuario = null;
         this.menuAbierto = false;
+        window.location.assign(enlacePagina("inicio"));
       } catch (error) {
         this.errorSesion = error.response?.data?.error
           || "No se pudo cerrar la sesión. Inténtalo de nuevo.";

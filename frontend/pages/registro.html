@@ -19,8 +19,8 @@
         <div class="col-12 lp-calculator">
           <!-- Presentación de la página y estados previos al formulario. -->
           <section aria-labelledby="titulo-registro" class="lp-calculator__intro">
-            <h1 id="titulo-registro">{{ tieneSimulacion ? "Solicita una visita" : (haySesion ? "Tu cuenta" : "Crea tu cuenta") }}</h1>
-            <p v-if="tieneSimulacion">Completa tus datos y elige un hueco disponible para que un instalador pueda visitar tu vivienda.</p>
+            <h1 id="titulo-registro">{{ tieneSimulacion && !mostrarFormularioCuentaSinSolicitud ? "Solicita una visita" : (haySesion ? "Tu cuenta" : "Crea tu cuenta") }}</h1>
+            <p v-if="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud">Completa tus datos y elige un hueco disponible para que un instalador pueda visitar tu vivienda.</p>
             <p v-else>Puedes crear una cuenta ahora y realizar una simulación o solicitar una visita más adelante.</p>
           </section>
 
@@ -29,15 +29,23 @@
           </p>
 
           <div v-if="!cargando">
-            <p
-              v-if="cuentaCreadaSinSolicitud"
-              class="alert alert-success"
-              role="status"
+            <fieldset
+              v-if="tieneSimulacion && !haySesion && franjasCargadas && franjas.length === 0 && !mostrarFormularioCuentaSinSolicitud"
+              class="lp-calculator__fieldset mb-4"
               aria-live="polite"
             >
-              Tu cuenta está creada y has iniciado sesión. No se ha solicitado ninguna visita.
-              <a v-if="!tieneSimulacion" :href="enlacePagina('calculadora')">Empieza una simulación</a>
-            </p>
+              <legend>Elige un hueco disponible</legend>
+              <p class="alert alert-info" role="status" aria-live="polite">
+                Ahora mismo no hay huecos libres en tu provincia. Puedes crear una cuenta sin solicitar una visita.
+              </p>
+              <button
+                class="btn btn-outline-success"
+                type="button"
+                @click="mostrarRegistroSinSolicitud"
+              >
+                Crear cuenta sin solicitar visita
+              </button>
+            </fieldset>
 
             <!-- Quien ya tiene cuenta puede iniciar sesión y volver a este proceso. -->
             <p v-if="!haySesion" class="mb-4">
@@ -45,7 +53,7 @@
               <a :href="enlaceLogin">Inicia sesión</a>
             </p>
 
-            <p v-if="!tieneSimulacion && haySesion && !cuentaCreadaSinSolicitud" class="alert alert-info" role="status">
+            <p v-if="!tieneSimulacion && haySesion" class="alert alert-info" role="status">
               Ya has iniciado sesión.
               <a :href="enlacePagina('calculadora')">Ir a la calculadora</a>
             </p>
@@ -55,9 +63,9 @@
             </p>
 
             <form
-              v-if="!esAdmin && (!haySesion || tieneSimulacion)"
+              v-if="!esAdmin && (!haySesion || tieneSimulacion) && (!tieneSimulacion || haySesion || !franjasCargadas || franjas.length > 0 || mostrarFormularioCuentaSinSolicitud)"
               class="lp-calculator__form d-flex flex-column p-3 p-md-4"
-              @submit.prevent="tieneSimulacion ? enviarSolicitud() : crearCuentaSinSolicitud()"
+              @submit.prevent="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud ? enviarSolicitud() : crearCuentaSinSolicitud()"
               novalidate
             >
               <!-- Los datos de cuenta solo se solicitan a visitantes sin sesión. -->
@@ -106,7 +114,7 @@
               </fieldset>
 
               <!-- Dirección donde se realizará la visita; el código postal debe corresponder a la provincia simulada. -->
-              <fieldset v-if="tieneSimulacion" class="lp-calculator__fieldset">
+              <fieldset v-if="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud" class="lp-calculator__fieldset">
                 <legend>Dirección de la instalación</legend>
                 <div class="row g-3">
                   <div class="col-12">
@@ -128,10 +136,10 @@
               </fieldset>
 
               <!-- Los huecos se cargan para la provincia y se seleccionan con un único grupo de radios. -->
-              <fieldset v-if="tieneSimulacion" class="lp-calculator__fieldset">
+              <fieldset v-if="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud" class="lp-calculator__fieldset">
                 <legend>Elige un hueco disponible</legend>
                 <p v-if="cargandoFranjas" role="status" aria-live="polite">Consultando huecos disponibles…</p>
-                <p v-else-if="franjas.length === 0 && !errorGeneral" role="status" aria-live="polite">Ahora mismo no hay huecos libres en tu provincia.</p>
+                <p v-else-if="franjas.length === 0 && !errorGeneral" class="alert alert-info" role="status" aria-live="polite">Ahora mismo no hay huecos libres en tu provincia.</p>
                 <div v-else-if="franjas.length > 0" class="d-flex flex-column gap-2">
                   <div v-for="franja in franjas" :key="franja.id" class="form-check">
                     <input
@@ -151,20 +159,9 @@
                   </div>
                 </div>
                 <small v-if="errores.franjaId" id="error-franjaId" class="text-danger" role="alert">{{ errores.franjaId }}</small>
-                <div v-if="franjas.length === 0 && !cargandoFranjas" class="mt-3">
-                  <p v-if="!haySesion" class="mb-2">Puedes crear tu cuenta ahora y solicitar una visita cuando haya disponibilidad.</p>
-                  <p v-else class="mb-2">Puedes volver a consultar más adelante; no se reservará ninguna visita hasta que la solicites.</p>
+                <div v-if="franjas.length === 0 && !cargandoFranjas && franjasCargadas" class="mt-3">
+                  <p class="mb-2">Puedes volver a consultar más adelante; no se reservará ninguna visita hasta que la solicites.</p>
                   <button
-                    v-if="!haySesion"
-                    class="btn btn-outline-success"
-                    type="button"
-                    :disabled="enviando"
-                    @click="crearCuentaSinSolicitud"
-                  >
-                    {{ enviando ? "Creando cuenta…" : "Crear cuenta sin solicitar visita" }}
-                  </button>
-                  <button
-                    v-else
                     class="btn btn-outline-success"
                     type="button"
                     :disabled="cargandoFranjas"
@@ -176,7 +173,7 @@
               </fieldset>
 
               <!-- Este consentimiento es necesario para enviar la solicitud al instalador colaborador. -->
-              <div v-if="tieneSimulacion" class="form-check">
+              <div v-if="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud" class="form-check">
                 <input id="aceptaEnvioDatos" v-model="formulario.aceptaEnvioDatos" class="form-check-input" :class="{ 'is-invalid': Boolean(errores.aceptaEnvioDatos) }" name="aceptaEnvioDatos" type="checkbox" required :aria-invalid="Boolean(errores.aceptaEnvioDatos)" :aria-describedby="errores.aceptaEnvioDatos ? 'error-aceptaEnvioDatos' : null" @change="limpiarError('aceptaEnvioDatos')">
                 <label class="form-check-label" for="aceptaEnvioDatos">
                   Acepto que mis datos se envíen al instalador colaborador de mi provincia para realizar la visita.
@@ -185,11 +182,11 @@
               </div>
 
               <!-- El estado de envío desactiva el botón y muestra una etiqueta de progreso. -->
-              <button v-if="tieneSimulacion" class="btn btn-primary align-self-start" type="submit" :disabled="enviando || cargandoFranjas || franjas.length === 0">
+              <button v-if="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud" class="btn btn-primary align-self-start" type="submit" :disabled="enviando || cargandoFranjas || franjas.length === 0">
                 {{ enviando ? "Enviando…" : "Solicitar visita" }}
               </button>
               <button v-else class="btn btn-primary align-self-start" type="submit" :disabled="enviando">
-                {{ enviando ? "Creando cuenta…" : "Crear cuenta" }}
+                {{ enviando ? "Registrando…" : "Registrarse" }}
               </button>
             </form>
           </div>
@@ -220,6 +217,7 @@
   <script src="../assets/js/components/Header.js"></script>
   <script src="../assets/js/components/Footer.js"></script>
   <script src="../assets/js/components/Chat.js"></script>
+  <script src="../assets/js/services/simulacion.js"></script>
 
   <!-- Página -->
   <script src="../assets/js/pages/registro.js"></script>
