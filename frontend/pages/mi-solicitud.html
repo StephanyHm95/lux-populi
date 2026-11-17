@@ -89,17 +89,21 @@
                 </ol>
               </section>
 
-              <p v-if="solicitud && solicitud.estado === 'cancelada'" class="alert alert-secondary" role="status">
-                Esta solicitud está cancelada.
-              </p>
-
               <p v-if="solicitud && solicitud.estado === 'enviada'" class="alert alert-info" role="status">
                 Tu solicitud ya está en manos de un instalador de tu provincia. Te visitará el día y la hora que elegiste.
               </p>
 
               <!-- Datos de visita y acciones de modificación/cancelación permitidas por el servidor. -->
-              <section v-if="solicitud" class="card p-3 p-md-4 mb-4" aria-labelledby="visita-title">
+              <section
+                v-if="solicitud"
+                class="card p-3 p-md-4 mb-4"
+                :class="{ 'bg-light text-secondary border-secondary': solicitud.estado === 'cancelada' }"
+                aria-labelledby="visita-title"
+              >
                 <h2 id="visita-title" class="h3">Datos de la visita</h2>
+                <p v-if="solicitud.estado === 'cancelada'" class="alert alert-secondary" role="status">
+                  Esta solicitud está cancelada.
+                </p>
                 <dl class="row mb-0">
                   <dt class="col-sm-4">Fecha y hora</dt>
                   <dd class="col-sm-8">{{ formatearFranja(solicitud.franja) }}</dd>
@@ -285,8 +289,11 @@
                 <p v-if="!solicitud && simulacionSinSolicitud" class="mb-0">
                   Pendiente de solicitar una visita para que un instalador pueda acudir a presupuestar.
                 </p>
+                <p v-else-if="solicitud.estado === 'cancelada' && solicitud.presupuesto === null" class="mb-0">
+                  La solicitud de visita para presupuestar ha sido cancelada.
+                </p>
                 <p v-else-if="solicitud.presupuesto === null" class="mb-0">
-                  Pendiente de recibir el presupuesto
+                  Pendiente de recibir el presupuesto.
                 </p>
                 <template v-else>
                   <p>Importe: <strong>{{ formatearEuros(solicitud.presupuesto.importe) }}</strong></p>
