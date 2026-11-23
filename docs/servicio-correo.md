@@ -1,12 +1,12 @@
-# BE 06 · Servicio de correo
+# BE 06 · Correo de las visitas
 
-Avance revisado el 23/11/2026.
+Actualizado el 23/11/2026.
 
-`backend/servicios/email.js` prepara el correo de una solicitud de visita y lo envia al instalador mediante Nodemailer. Incluye los datos del cliente, la direccion, la franja y una estimacion de la instalacion. El remitente y la direccion de respuesta son `EMAIL_EMPRESA`.
+`backend/servicios/email.js` envía al instalador los datos del cliente, la dirección, el horario de visita y el cálculo de la instalación. Las respuestas llegan al correo de la empresa.
 
-## Configuracion
+## Para usarlo
 
-El entorno debe proporcionar estas variables; las credenciales reales se guardan fuera de Git:
+Pon estos datos en `.env`, sustituyendo los ejemplos por los de tu cuenta de correo:
 
 ```dotenv
 SMTP_HOST=smtp.ethereal.email
@@ -17,22 +17,18 @@ SMTP_CONTRASENA=tu_contrasena_de_prueba
 EMAIL_EMPRESA=correo_de_tu_cuenta_de_prueba
 ```
 
-El puerto 465 activa la conexion cifrada desde el principio por defecto. `SMTP_SEGURO` permite indicar `true` o `false` de forma explicita. Si se proporciona un usuario SMTP, tambien hace falta su contrasena.
+## Qué se probó
 
-`enviarSolicitud(solicitud, emailInstalador)` devuelve el resultado del envio cuando el servidor SMTP acepta un destinatario. Los errores de configuracion o de envio producen un error con `status: 503`, sin incluir las credenciales en el mensaje. `emailValido` comprueba el formato y el limite de 150 caracteres.
+El 23/11/2026 se comprobó en este ordenador que el correo lleva los datos correctos y que avisa si la dirección, la configuración o el envío fallan. No se enviaron correos reales. También pasaron las cinco pruebas de cálculo.
 
-## Comprobaciones del avance
-
-El 23/11/2026 se comprobo el servicio con un SMTP local que captura los mensajes en memoria: aceptacion del correo, contenido de la visita y de la empresa, rechazo de destinatarios incorrectos, rechazo SMTP y configuracion ausente. No se enviaron correos externos en esa comprobacion.
-
-`scripts/probar-correo.js` permite una prueba opcional con una cuenta temporal de Ethereal y datos ficticios:
+Para una prueba opcional con Ethereal, que permite ver el correo sin enviarlo a nadie:
 
 ```powershell
 node scripts/probar-correo.js
 ```
 
-El script muestra un enlace de vista previa y no modifica el archivo `.env`. Esta revision no ha ejecutado una nueva prueba con Ethereal.
+El comando usa datos ficticios y no cambia `.env`. Esta vez no se repitió la prueba con Ethereal.
 
-## Pendiente de integrar
+## Qué falta
 
-Este avance incorpora el servicio, su dependencia y el script de prueba. La ruta 24 del administrador y el cambio de estado de la solicitud se incorporaran por separado con BE 07. Tambien quedan pendientes la configuracion SMTP del despliegue y la comprobacion del flujo completo desde el frontend.
+El correo está subido en `backend/gestion-pendiente`, pero aún no está unido a `main`. Falta revisarlo, conectarlo al panel del administrador mediante la ruta 24 (BE 07), configurar el correo de la web y probarlo todo junto.
