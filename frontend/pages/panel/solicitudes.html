@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solicitudes</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.png">
 
   <!-- CSS -->
   <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
@@ -16,8 +18,269 @@
 
     <main class="container flex-grow-1 d-flex flex-column py-4 py-md-5">
       <div class="row g-4 flex-grow-1">
-        <div class="col-12">
-          <!-- contenido específico -->
+        <p v-if="cargando" class="col-12 lp-admin__notice" role="status" aria-live="polite">
+          Comprobando el acceso al panel…
+        </p>
+        <div v-else class="col-12 lp-admin">
+          <header class="lp-admin__intro">
+            <p class="lp-admin__eyebrow">Panel de administración</p>
+            <h1>Solicitudes</h1>
+            <p>Consulta las solicitudes y gestiona su envío al instalador y sus presupuestos.</p>
+          </header>
+
+          <nav class="lp-admin__tabs" aria-label="Secciones del panel">
+            <a class="lp-admin__tab lp-admin__tab--active" :href="enlacePagina('panelSolicitudes')" aria-current="page">Solicitudes</a>
+            <a class="lp-admin__tab" :href="enlacePagina('panelCalendario')">Calendario</a>
+            <a class="lp-admin__tab" :href="enlacePagina('panelDatosPresupuesto')">Datos</a>
+          </nav>
+
+          <p v-if="errorGeneral" class="alert alert-danger mt-4" role="alert" aria-live="polite">{{ errorGeneral }}</p>
+          <p v-if="mensajeExito" class="alert alert-success mt-4" role="status" aria-live="polite">{{ mensajeExito }}</p>
+
+          <section class="lp-admin__section mt-4" aria-labelledby="solicitudes-heading">
+            <div class="lp-admin__section-heading">
+              <div>
+                <h2 id="solicitudes-heading">Solicitudes recibidas</h2>
+                <p>Filtra por estado o provincia para encontrar una solicitud.</p>
+              </div>
+            </div>
+
+            <div class="lp-admin__filters lp-admin__filters--auto">
+              <div>
+                <label class="form-label" for="filtroEstado">Estado</label>
+                <select
+                  id="filtroEstado"
+                  v-model="filtros.estado"
+                  class="form-select"
+                  name="estado"
+                  @change="actualizarFiltro('estado', $event)"
+                >
+                  <option value="todos">Todos los estados</option>
+                  <option v-for="estado in estados" :key="estado" :value="estado">{{ etiquetaEstado(estado) }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" for="filtroProvincia">Provincia</label>
+                <select
+                  id="filtroProvincia"
+                  v-model="filtros.provincia"
+                  class="form-select"
+                  name="provincia"
+                  @change="actualizarFiltro('provincia', $event)"
+                >
+                  <option value="">Todas las provincias</option>
+                  <option v-for="provincia in provincias" :key="provincia.codigo" :value="provincia.codigo">
+                    {{ provincia.nombre }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <p v-if="cargandoLista" class="lp-admin__notice" role="status" aria-live="polite">Cargando solicitudes…</p>
+            <p v-else-if="solicitudes.length === 0" class="lp-admin__notice" role="status" aria-live="polite">
+              No hay solicitudes que coincidan con estos filtros.
+            </p>
+            <div
+              v-if="!cargandoLista && solicitudes.length > 0"
+              class="d-none d-md-block table-responsive lp-admin__table-wrap"
+              role="region"
+              aria-label="Tabla de solicitudes"
+              tabindex="0"
+            >
+              <table class="table align-middle lp-admin__table">
+                <caption class="visually-hidden">Solicitudes recibidas</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Cliente</th>
+                    <th scope="col">Municipio</th>
+                    <th scope="col">Provincia</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Visita</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="solicitud in solicitudes" :key="solicitud.id">
+                    <td>{{ solicitud.cliente }}</td>
+                    <td>{{ solicitud.municipio }}</td>
+                    <td>{{ solicitud.provincia }}</td>
+                    <td>{{ etiquetaTipo(solicitud.tipoInstalacion) }}</td>
+                    <td>{{ formatearFranja(solicitud) }}</td>
+                    <td><span class="badge lp-admin__status">{{ etiquetaEstado(solicitud.estado) }}</span></td>
+                    <td>
+                      <button
+                        class="btn btn-sm btn-outline-success"
+                        type="button"
+                        :aria-label="`Ver solicitud de ${solicitud.cliente}`"
+                        :disabled="cargandoDetalle"
+                        @click="verSolicitud(solicitud.id)"
+                      >Ver</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ul
+              v-if="!cargandoLista && solicitudes.length > 0"
+              class="lp-admin__mobile-list d-md-none list-unstyled"
+              aria-label="Solicitudes recibidas"
+            >
+              <li v-for="solicitud in solicitudes" :key="solicitud.id">
+                <article class="lp-admin__mobile-card">
+                  <header class="d-flex justify-content-between align-items-start gap-2">
+                    <h3 class="lp-admin__mobile-card-title">{{ solicitud.cliente }}</h3>
+                    <span class="badge lp-admin__status">{{ etiquetaEstado(solicitud.estado) }}</span>
+                  </header>
+                  <dl class="lp-admin__mobile-card-details">
+                    <dt>Visita</dt>
+                    <dd>{{ formatearFranja(solicitud) }}</dd>
+                    <dt>Municipio y provincia</dt>
+                    <dd>{{ solicitud.municipio }}, {{ solicitud.provincia }}</dd>
+                    <dt>Tipo</dt>
+                    <dd>{{ etiquetaTipo(solicitud.tipoInstalacion) }}</dd>
+                  </dl>
+                  <button
+                    class="btn btn-sm btn-outline-success w-100 mt-3"
+                    type="button"
+                    :aria-label="`Ver solicitud de ${solicitud.cliente}`"
+                    :disabled="cargandoDetalle"
+                    @click="verSolicitud(solicitud.id)"
+                  >Ver solicitud</button>
+                </article>
+              </li>
+            </ul>
+          </section>
+
+          <p v-if="cargandoDetalle" class="lp-admin__notice mt-4" role="status" aria-live="polite">
+            Cargando detalle de la solicitud…
+          </p>
+
+          <section v-if="detalle" class="lp-admin__section lp-admin__detail mt-4" aria-labelledby="detalle-heading">
+            <div class="lp-admin__section-heading">
+              <div>
+                <p class="lp-admin__eyebrow">Solicitud #{{ detalle.id }}</p>
+                <h2 id="detalle-heading">Detalle de la solicitud</h2>
+              </div>
+              <span class="badge lp-admin__status">{{ etiquetaEstado(detalle.estado) }}</span>
+            </div>
+
+            <div class="lp-admin__detail-grid">
+              <section class="lp-admin__info-card" aria-labelledby="cliente-heading">
+                <h3 id="cliente-heading">Cliente y dirección</h3>
+                <dl class="lp-admin__definition-list">
+                  <dt>Nombre</dt><dd>{{ detalle.cliente.nombre }} {{ detalle.cliente.apellidos }}</dd>
+                  <dt>Email</dt><dd><a :href="`mailto:${detalle.cliente.email}`">{{ detalle.cliente.email }}</a></dd>
+                  <dt>Teléfono</dt><dd><a :href="`tel:${detalle.cliente.telefono}`">{{ detalle.cliente.telefono }}</a></dd>
+                  <dt>Dirección</dt><dd>{{ detalle.direccion }}, {{ detalle.municipio }} ({{ detalle.codigoPostal }})</dd>
+                  <dt>Provincia</dt><dd>{{ detalle.provincia }}</dd>
+                  <dt>Visita</dt><dd>{{ formatearFranja(detalle.franja) }}</dd>
+                  <template v-if="detalle.emailInstalador">
+                    <dt>Instalador</dt><dd>Enviada a: {{ detalle.emailInstalador }}</dd>
+                  </template>
+                </dl>
+              </section>
+
+              <section class="lp-admin__info-card" aria-labelledby="simulacion-heading">
+                <h3 id="simulacion-heading">Simulación</h3>
+                <dl class="lp-admin__definition-list">
+                  <template v-for="dato in datosSimulacion" :key="dato.nombre">
+                    <dt>{{ dato.nombre }}</dt><dd>{{ dato.valor }}</dd>
+                  </template>
+                </dl>
+              </section>
+            </div>
+
+            <section v-if="detalle.presupuesto" class="lp-admin__budget mt-4" aria-labelledby="presupuesto-heading">
+              <h3 id="presupuesto-heading">Presupuesto</h3>
+              <p><strong>Importe:</strong> {{ formatearEuros(detalle.presupuesto.importe) }}</p>
+              <p v-if="detalle.estado === 'presupuesto_enviado'">El cliente aún no ha respondido.</p>
+              <p v-else-if="detalle.estado === 'aceptado'">El cliente ha aceptado el presupuesto.</p>
+              <p v-else-if="detalle.estado === 'rechazado'">El cliente ha rechazado el presupuesto.</p>
+              <button
+                type="button"
+                class="btn btn-outline-success"
+                :disabled="!!accionEnCurso"
+                @click="descargarPresupuesto"
+              >{{ accionEnCurso === "descargar" ? "Descargando…" : "Descargar PDF" }}</button>
+            </section>
+
+            <div v-if="detalle.accionesPermitidas.includes('enviar')" class="lp-admin__action mt-4">
+              <h3>Enviar al instalador</h3>
+              <form class="lp-admin__action-form" @submit.prevent="enviarAlInstalador">
+                <div>
+                  <label class="form-label" for="emailInstalador">Email del instalador</label>
+                  <input
+                    id="emailInstalador"
+                    v-model.trim="formulario.emailInstalador"
+                    class="form-control"
+                    :class="{ 'is-invalid': errores.emailInstalador }"
+                    type="email"
+                    name="emailInstalador"
+                    maxlength="150"
+                    required
+                    autocomplete="email"
+                    :aria-describedby="errores.emailInstalador ? 'errorEmailInstalador' : null"
+                    @input="limpiarError('emailInstalador')"
+                  >
+                  <p v-if="errores.emailInstalador" id="errorEmailInstalador" class="invalid-feedback d-block" aria-live="polite">
+                    {{ errores.emailInstalador }}
+                  </p>
+                </div>
+                <button class="btn btn-primary" type="submit" :disabled="!!accionEnCurso">
+                  {{ accionEnCurso === "enviar" ? "Enviando…" : "Enviar" }}
+                </button>
+              </form>
+            </div>
+
+            <div v-if="detalle.accionesPermitidas.includes('subir_presupuesto')" class="lp-admin__action mt-4">
+              <h3>Subir presupuesto</h3>
+              <form class="lp-admin__action-form lp-admin__budget-form" @submit.prevent="subirPresupuesto">
+                <div>
+                  <label class="form-label" for="importe">Importe (€)</label>
+                  <input
+                    id="importe"
+                    v-model="formulario.importe"
+                    class="form-control"
+                    :class="{ 'is-invalid': errores.importe }"
+                    type="number"
+                    name="importe"
+                    min="0.01"
+                    step="any"
+                    required
+                    :aria-describedby="errores.importe ? 'errorImporte' : null"
+                    @input="limpiarError('importe')"
+                  >
+                  <p v-if="errores.importe" id="errorImporte" class="invalid-feedback d-block" aria-live="polite">{{ errores.importe }}</p>
+                </div>
+                <div>
+                  <label class="form-label" for="pdf">Presupuesto en PDF (máximo 5 MB)</label>
+                  <input
+                    id="pdf"
+                    ref="pdfInput"
+                    class="form-control"
+                    :class="{ 'is-invalid': errores.pdf }"
+                    type="file"
+                    name="pdf"
+                    accept="application/pdf,.pdf"
+                    required
+                    :aria-describedby="errores.pdf ? 'errorPdf' : null"
+                    @change="seleccionarPdf"
+                  >
+                  <p v-if="errores.pdf" id="errorPdf" class="invalid-feedback d-block" aria-live="polite">{{ errores.pdf }}</p>
+                </div>
+                <button class="btn btn-primary" type="submit" :disabled="!!accionEnCurso">
+                  {{ accionEnCurso === "presupuesto" ? "Subiendo…" : "Subir presupuesto" }}
+                </button>
+              </form>
+            </div>
+
+            <div v-if="detalle.accionesPermitidas.includes('cancelar')" class="lp-admin__cancel mt-4">
+              <button class="btn btn-outline-danger" type="button" :disabled="!!accionEnCurso" @click="cancelarSolicitud">
+                {{ accionEnCurso === "cancelar" ? "Cancelando…" : "Cancelar solicitud" }}
+              </button>
+            </div>
+          </section>
         </div>
       </div>
       <chat-component></chat-component>
@@ -41,6 +304,7 @@
 
   <!-- Componentes -->
   <script src="../../assets/js/services/sesion.js"></script>
+  <script src="../../assets/js/services/solicitud.js"></script>
   <script src="../../assets/js/components/Header.js"></script>
   <script src="../../assets/js/components/Footer.js"></script>
   <script src="../../assets/js/components/Chat.js"></script>

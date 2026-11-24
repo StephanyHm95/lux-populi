@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mi solicitud | Lux Populi</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.png">
 
   <!-- CSS -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
@@ -45,7 +47,7 @@
             </p>
 
             <section v-if="sinSolicitud && !simulacionSinSolicitud" class="card p-3 p-md-4" aria-labelledby="sin-solicitud-title">
-              <h2 id="sin-solicitud-title" class="h4">Todavía no tienes ninguna solicitud</h2>
+              <h2 id="sin-solicitud-title" class="lp-request__section-title">Todavía no tienes ninguna solicitud</h2>
               <p v-if="simulacionIdSinSolicitud">No se han podido recuperar los resultados de esta simulación. Puedes realizar otra para consultar sus resultados.</p>
               <p v-else>Haz una simulación para conocer el ahorro estimado de tu instalación.</p>
               <a class="btn btn-primary align-self-start" :href="enlacePagina('calculadora')">
@@ -61,7 +63,7 @@
                 aria-labelledby="seguimiento-title"
                 aria-live="polite"
               >
-                <h2 id="seguimiento-title" class="h3">Seguimiento</h2>
+                <h2 id="seguimiento-title" class="lp-request__section-title">Seguimiento</h2>
                 <ol class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 list-unstyled">
                   <li
                     v-for="(paso, indice) in pasosSeguimiento"
@@ -76,7 +78,7 @@
                         'lp-request-step--completed': paso.completado
                       }"
                     >
-                      <h3 class="h5 mb-2">{{ indice + 1 }}. {{ paso.etiqueta }}</h3>
+                      <h3 class="lp-request__step-title mb-2">{{ indice + 1 }}. {{ paso.etiqueta }}</h3>
                       <span v-if="paso.actual" class="badge text-bg-success align-self-start">
                         Estado actual
                       </span>
@@ -96,11 +98,11 @@
               <!-- Datos de visita y acciones de modificación/cancelación permitidas por el servidor. -->
               <section
                 v-if="solicitud"
-                class="card p-3 p-md-4 mb-4"
-                :class="{ 'bg-light text-secondary border-secondary': solicitud.estado === 'cancelada' }"
+                class="lp-request__section-card card p-3 p-md-4 mb-4"
+                :class="{ 'bg-light text-secondary': solicitud.estado === 'cancelada' }"
                 aria-labelledby="visita-title"
               >
-                <h2 id="visita-title" class="h3">Datos de la visita</h2>
+                <h2 id="visita-title" class="lp-request__section-title">Datos de la visita</h2>
                 <p v-if="solicitud.estado === 'cancelada'" class="alert alert-secondary" role="status">
                   Esta solicitud está cancelada.
                 </p>
@@ -140,12 +142,12 @@
                 </p>
               </section>
 
-              <section v-else class="card p-3 p-md-4 mb-4" aria-labelledby="visita-title">
-                <h2 id="visita-title" class="h3">Datos de la visita</h2>
+              <section v-else class="lp-request__section-card card p-3 p-md-4 mb-4" aria-labelledby="visita-title">
+                <h2 id="visita-title" class="lp-request__section-title">Datos de la visita</h2>
                 <p class="alert alert-info mb-3" role="status" aria-live="polite">
                   Aún no has solicitado una visita. Puedes consultar los huecos disponibles más adelante.
                 </p>
-                <a class="btn btn-outline-success align-self-start" :href="enlaceConsultarHuecos">
+                <a class="btn btn-primary align-self-start" :href="enlaceConsultarHuecos">
                   Consultar huecos disponibles
                 </a>
               </section>
@@ -154,15 +156,15 @@
               <section
                 v-if="solicitud && mostrarModificacion && solicitud.sePuedeModificar"
                 id="modificar-franja"
-                class="lp-calculator__form card p-3 p-md-4 mb-4"
+                class="lp-form-surface lp-request__form-section card p-3 p-md-4 mb-4"
                 aria-labelledby="modificar-title"
               >
-                <h2 id="modificar-title" class="h3">Elige una nueva fecha</h2>
+                <h2 id="modificar-title" class="lp-request__section-title">Elige una nueva fecha</h2>
                 <p v-if="cargandoFranjas" role="status" aria-live="polite">Buscando huecos disponibles…</p>
                 <p v-else-if="franjas.length === 0" class="mb-0">
                   Ahora mismo no hay huecos libres en tu provincia.
                 </p>
-                <fieldset v-else class="lp-calculator__fieldset">
+                <fieldset v-else class="lp-form-fieldset">
                   <legend>Huecos disponibles</legend>
                   <div
                     v-for="franja in franjas"
@@ -202,7 +204,7 @@
 
               <!-- Resumen de valores devueltos por la simulación original. -->
               <section class="mb-4" aria-labelledby="simulacion-title">
-                <h2 id="simulacion-title" class="h3">Mi simulación</h2>
+                <h2 id="simulacion-title" class="lp-request__section-title">Mi simulación</h2>
                 <p v-if="simulacionActual.tejadoLimita" class="alert alert-info" role="status">
                   La superficie del tejado limita el número de paneles de la instalación.
                 </p>
@@ -284,8 +286,8 @@
               </section>
 
               <!-- El bloque permanece visible durante todo el seguimiento de la solicitud. -->
-              <section class="card p-3 p-md-4 mb-4" aria-labelledby="presupuesto-title">
-                <h2 id="presupuesto-title" class="h3">Presupuesto del instalador</h2>
+              <section class="lp-request__section-card card p-3 p-md-4 mb-4" aria-labelledby="presupuesto-title">
+                <h2 id="presupuesto-title" class="lp-request__section-title">Presupuesto del instalador</h2>
                 <p v-if="!solicitud && simulacionSinSolicitud" class="mb-0">
                   Pendiente de solicitar una visita para que un instalador pueda acudir a presupuestar.
                 </p>

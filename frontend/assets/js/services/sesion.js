@@ -1,23 +1,28 @@
-// Ruta 2: Iniciar sesión
-async function iniciarSesionApi(datos) {
-    const respuesta = await api.post("/auth/login", datos);
-    return respuesta.data;
-}
-// Ruta 4: Obtener usuario de sesión
-async function obtenerUsuario() {
-    const respuesta = await obtenerSesion();
-    return respuesta.data;
-}
-// Ruta 3: Cerrar sesión
-async function cerrarSesionApi() {
-    const respuesta = await logout();
-    return respuesta.data;
-}
 // Ruta 1: Crear cuenta de cliente
 async function crearCuentaCliente(datos) {
     const respuesta = await api.post("/auth/registro", datos);
     return respuesta.data;
 }
+
+// Ruta 2: Iniciar sesión
+async function iniciarSesionApi(datos) {
+    const respuesta = await api.post("/auth/login", datos);
+    return respuesta.data;
+}
+
+// Ruta 3: Cerrar sesión
+async function cerrarSesionApi() {
+    const respuesta = await logout();
+    return respuesta.data;
+}
+
+// Ruta 4: Obtener usuario de sesión
+async function obtenerUsuario() {
+    const respuesta = await obtenerSesion();
+    return respuesta.data;
+}
+
+
 
 
 /* 

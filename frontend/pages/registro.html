@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Crear cuenta o solicitar una visita | Lux Populi</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.png">
 
   <!-- CSS -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
@@ -31,7 +33,7 @@
           <div v-if="!cargando">
             <fieldset
               v-if="tieneSimulacion && !haySesion && franjasCargadas && franjas.length === 0 && !mostrarFormularioCuentaSinSolicitud"
-              class="lp-calculator__fieldset mb-4"
+              class="lp-form-fieldset mb-4"
               aria-live="polite"
             >
               <legend>Elige un hueco disponible</legend>
@@ -39,7 +41,7 @@
                 Ahora mismo no hay huecos libres en tu provincia. Puedes crear una cuenta sin solicitar una visita.
               </p>
               <button
-                class="btn btn-outline-success"
+                class="btn btn-primary"
                 type="button"
                 @click="mostrarRegistroSinSolicitud"
               >
@@ -64,12 +66,12 @@
 
             <form
               v-if="!esAdmin && (!haySesion || tieneSimulacion) && (!tieneSimulacion || haySesion || !franjasCargadas || franjas.length > 0 || mostrarFormularioCuentaSinSolicitud)"
-              class="lp-calculator__form d-flex flex-column p-3 p-md-4"
+              class="lp-form-surface lp-registration__form d-flex flex-column p-3 p-md-4"
               @submit.prevent="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud ? enviarSolicitud() : crearCuentaSinSolicitud()"
               novalidate
             >
               <!-- Los datos de cuenta solo se solicitan a visitantes sin sesión. -->
-              <fieldset v-if="!haySesion" class="lp-calculator__fieldset">
+              <fieldset v-if="!haySesion" class="lp-form-fieldset">
                 <legend>Datos personales</legend>
                 <div class="row g-3">
                   <div class="col-12 col-md-6">
@@ -114,7 +116,7 @@
               </fieldset>
 
               <!-- Dirección donde se realizará la visita; el código postal debe corresponder a la provincia simulada. -->
-              <fieldset v-if="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud" class="lp-calculator__fieldset">
+              <fieldset v-if="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud" class="lp-form-fieldset">
                 <legend>Dirección de la instalación</legend>
                 <div class="row g-3">
                   <div class="col-12">
@@ -136,7 +138,7 @@
               </fieldset>
 
               <!-- Los huecos se cargan para la provincia y se seleccionan con un único grupo de radios. -->
-              <fieldset v-if="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud" class="lp-calculator__fieldset">
+              <fieldset v-if="tieneSimulacion && !mostrarFormularioCuentaSinSolicitud" class="lp-form-fieldset">
                 <legend>Elige un hueco disponible</legend>
                 <p v-if="cargandoFranjas" role="status" aria-live="polite">Consultando huecos disponibles…</p>
                 <p v-else-if="franjas.length === 0 && !errorGeneral" class="alert alert-info" role="status" aria-live="polite">Ahora mismo no hay huecos libres en tu provincia.</p>
