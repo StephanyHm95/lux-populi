@@ -1,6 +1,7 @@
 // Rutas 16-21: solicitudes del cliente
 const express = require("express");
 const db = require("../db");
+const { rutaPresupuesto } = require("../servicios/presupuestos");
 const { requiereSesion, requiereRol } = require("../middleware/sesion");
 const router = express.Router();
 
@@ -375,5 +376,46 @@ router.put("/:id/respuesta", requiereRol("cliente"), async (req, res) => {
     }
 });
 
-// Pendiente: ruta 21, descargar el PDF del presupuesto
+// Ruta 21: descargar el presupuesto propio; el admin tambien puede verlo
+router.get("/:id/presupuesto", requiereSesion, async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        if (!idValido(id)) return res.status(404).json({ error: "La solicitud no existe" });
+        const resultado = await db.query(
+            `SELECT s.usuario_id, b.archivo_pdf FROM solicitud s
+             LEFT JOIN presupuesto b ON b.solicitud_id = s.id WHERE s.id = ?`, [id]
+        );
+        if (resultado[0].length === 0) {
+            return res.status(404).json({ error: "La solicitud no existe" });
+        }
+        const solicitud = resultado[0][0];
+        if (req.session.usuario.rol !== "admin") {
+            if (solicitud.usuario_id !== req.session.usuario.id) {
+                return res.status(403).json({ error: "No es tu solicitud" });
+            }
+        }
+        const ruta = rutaPresupuesto(solicitud.archivo_pdf);
+        if (ruta === null) {
+            return res.status(404).json({ error: "Esta solicitud no tiene presupuesto" });
+        }
+        res.download(ruta, "presupuesto-" + id + ".pdf", {
+            headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" }
+        }, error => {
+            if (!error) return;
+            if (res.headersSent) {
+                res.destroy();
+                return;
+            }
+            if (error.code === "ENOENT") {
+                return res.status(404).json({ error: "Esta solicitud no tiene presupuesto" });
+            }
+            console.error(error);
+            res.status(500).json({ error: "Error del servidor" });
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error del servidor" });
+    }
+});
+
 module.exports = router;
