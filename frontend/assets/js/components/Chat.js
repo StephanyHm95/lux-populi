@@ -128,7 +128,7 @@ const ChatComponent = {
           </p>
         </div>
 
-        <p v-if="error" class="lp-chat__error" role="alert" aria-live="polite">
+        <p v-if="error" class="lp-chat__error text-danger" role="alert" aria-live="polite">
           {{ error }}
         </p>
 
@@ -158,6 +158,7 @@ const ChatComponent = {
 
       <button
         class="lp-chat__toggle"
+        :class="{ 'lp-chat__toggle--open': abierto }"
         type="button"
         :aria-expanded="abierto"
         aria-controls="lp-chat-window"

@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calendario</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.png">
 
   <!-- CSS -->
   <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
@@ -16,8 +18,237 @@
 
     <main class="container flex-grow-1 d-flex flex-column py-4 py-md-5">
       <div class="row g-4 flex-grow-1">
-        <div class="col-12">
-          <!-- contenido específico -->
+        <p v-if="cargando" class="col-12 lp-admin__notice" role="status" aria-live="polite">
+          Comprobando el acceso al panel…
+        </p>
+        <div v-else class="col-12 lp-admin">
+          <header class="lp-admin__intro">
+            <p class="lp-admin__eyebrow">Panel de administración</p>
+            <h1>Calendario</h1>
+            <p>Crea huecos de visita y consulta su disponibilidad por provincia.</p>
+          </header>
+
+          <nav class="lp-admin__tabs" aria-label="Secciones del panel">
+            <a class="lp-admin__tab" :href="enlacePagina('panelSolicitudes')">Solicitudes</a>
+            <a class="lp-admin__tab lp-admin__tab--active" :href="enlacePagina('panelCalendario')" aria-current="page">Calendario</a>
+            <a class="lp-admin__tab" :href="enlacePagina('panelDatosPresupuesto')">Datos</a>
+          </nav>
+
+          <p v-if="errorGeneral" class="alert alert-danger mt-4" role="alert" aria-live="polite">{{ errorGeneral }}</p>
+          <p v-if="mensajeExito" class="alert alert-success mt-4" role="status" aria-live="polite">{{ mensajeExito }}</p>
+
+          <section class="lp-admin__section mt-4" aria-labelledby="huecos-heading">
+            <div class="lp-admin__section-heading">
+              <div>
+                <h2 id="huecos-heading">Huecos de visita</h2>
+                <p>Los huecos con una solicitud previa no se pueden eliminar.</p>
+              </div>
+              <button
+                v-if="!mostrarFormularioNuevoHueco"
+                ref="botonCrearHueco"
+                class="btn btn-primary"
+                type="button"
+                @click="iniciarNuevoHueco"
+              >Crear hueco</button>
+            </div>
+
+            <section
+              v-if="mostrarFormularioNuevoHueco"
+              id="nuevo-hueco-formulario"
+              class="lp-admin__form-panel mb-4"
+              aria-labelledby="nuevo-hueco-heading"
+            >
+              <h3 id="nuevo-hueco-heading">Nuevo hueco</h3>
+              <p>Selecciona la provincia y el horario de la visita.</p>
+              <form class="lp-calendar__form" @submit.prevent="crearFranja">
+                <div>
+                  <label class="form-label" for="provincia">Provincia</label>
+                  <select
+                    id="provincia"
+                    ref="provinciaHueco"
+                    v-model="formulario.provincia"
+                    class="form-select"
+                    :class="{ 'is-invalid': errores.provincia }"
+                    name="provincia"
+                    required
+                    :aria-describedby="errores.provincia ? 'errorProvincia' : null"
+                    @change="limpiarError('provincia')"
+                  >
+                    <option value="" disabled>Elige una provincia</option>
+                    <option v-for="provincia in provincias" :key="provincia.codigo" :value="provincia.codigo">
+                      {{ provincia.nombre }}
+                    </option>
+                  </select>
+                  <p v-if="errores.provincia" id="errorProvincia" class="invalid-feedback d-block" aria-live="polite">
+                    {{ errores.provincia }}
+                  </p>
+                </div>
+                <div>
+                  <label class="form-label" for="fecha">Fecha</label>
+                  <input
+                    id="fecha"
+                    v-model="formulario.fecha"
+                    class="form-control"
+                    :class="{ 'is-invalid': errores.fecha }"
+                    type="date"
+                    name="fecha"
+                    :min="fechaMinima"
+                    required
+                    :aria-describedby="errores.fecha ? 'errorFecha' : null"
+                    @input="limpiarError('fecha')"
+                  >
+                  <p v-if="errores.fecha" id="errorFecha" class="invalid-feedback d-block" aria-live="polite">
+                    {{ errores.fecha }}
+                  </p>
+                </div>
+                <div>
+                  <label class="form-label" for="horaInicio">Hora de inicio</label>
+                  <input
+                    id="horaInicio"
+                    v-model="formulario.horaInicio"
+                    class="form-control"
+                    :class="{ 'is-invalid': errores.horaInicio }"
+                    type="time"
+                    name="horaInicio"
+                    required
+                    :aria-describedby="errores.horaInicio ? 'errorHoraInicio' : null"
+                    @input="limpiarError('horaInicio')"
+                  >
+                  <p v-if="errores.horaInicio" id="errorHoraInicio" class="invalid-feedback d-block" aria-live="polite">
+                    {{ errores.horaInicio }}
+                  </p>
+                </div>
+                <div>
+                  <label class="form-label" for="horaFin">Hora de fin</label>
+                  <input
+                    id="horaFin"
+                    v-model="formulario.horaFin"
+                    class="form-control"
+                    :class="{ 'is-invalid': errores.horaFin }"
+                    type="time"
+                    name="horaFin"
+                    required
+                    :aria-describedby="errores.horaFin ? 'errorHoraFin' : null"
+                    @input="limpiarError('horaFin')"
+                  >
+                  <p v-if="errores.horaFin" id="errorHoraFin" class="invalid-feedback d-block" aria-live="polite">
+                    {{ errores.horaFin }}
+                  </p>
+                </div>
+                <div class="lp-calendar__form-actions">
+                  <button class="btn btn-primary" type="submit" :disabled="enviando">
+                    {{ enviando ? "Creando…" : "Crear hueco" }}
+                  </button>
+                  <button class="btn btn-outline-secondary" type="button" :disabled="enviando" @click="cancelarNuevoHueco">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <div class="lp-admin__filters lp-admin__filters--auto">
+              <div>
+                <label class="form-label" for="ver">Mostrar</label>
+                <select id="ver" v-model="filtros.ver" class="form-select" name="ver" @change="actualizarFiltro('ver', $event)">
+                  <option value="proximas">Próximos</option>
+                  <option value="todas">Todos</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label" for="filtroProvincia">Provincia</label>
+                <select id="filtroProvincia" v-model="filtros.provincia" class="form-select" name="provincia" @change="actualizarFiltro('provincia', $event)">
+                  <option value="">Todas las provincias</option>
+                  <option v-for="provincia in provincias" :key="provincia.codigo" :value="provincia.codigo">
+                    {{ provincia.nombre }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <p v-if="cargandoLista" class="lp-admin__notice" role="status" aria-live="polite">Cargando huecos…</p>
+            <p v-else-if="franjas.length === 0" class="lp-admin__notice" role="status" aria-live="polite">
+              No hay huecos que coincidan con estos filtros.
+            </p>
+            <div
+              v-if="!cargandoLista && franjas.length > 0"
+              class="d-none d-md-block table-responsive lp-admin__table-wrap"
+              role="region"
+              aria-label="Tabla de huecos de visita"
+              tabindex="0"
+            >
+              <table class="table align-middle lp-admin__table lp-calendar__table">
+                <caption class="visually-hidden">Huecos de visita</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Fecha y horario</th>
+                    <th scope="col">Provincia</th>
+                    <th scope="col">Disponibilidad y solicitud</th>
+                    <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="franja in franjas" :key="franja.id">
+                    <td>{{ formatearFranja(franja) }}</td>
+                    <td>{{ franja.provincia }}</td>
+                    <td>
+                      <template v-if="franja.solicitud">
+                        <span class="badge lp-admin__status">{{ etiquetaEstado(franja.solicitud.estado) }}</span>
+                        <span class="d-block mt-1">{{ franja.solicitud.cliente }} · {{ franja.solicitud.municipio }}</span>
+                      </template>
+                      <span v-else-if="franja.ocupada" class="badge lp-admin__status">Ocupada</span>
+                      <span v-else class="badge lp-calendar__status-free">Libre</span>
+                    </td>
+                    <td>
+                      <button
+                        v-if="!franja.ocupada && !franja.solicitud"
+                        class="btn btn-sm btn-outline-danger"
+                        type="button"
+                        :disabled="!!eliminandoId"
+                        :aria-label="`Eliminar hueco del ${formatearFranja(franja)}`"
+                        @click="eliminarFranja(franja)"
+                      >{{ eliminandoId === franja.id ? "Eliminando…" : "Eliminar" }}</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ul
+              v-if="!cargandoLista && franjas.length > 0"
+              class="lp-admin__mobile-list d-md-none list-unstyled"
+              aria-label="Huecos de visita"
+            >
+              <li v-for="franja in franjas" :key="franja.id">
+                <article class="lp-admin__mobile-card">
+                  <header class="d-flex justify-content-between align-items-start gap-2">
+                    <h3 class="lp-admin__mobile-card-title">{{ formatearFranja(franja) }}</h3>
+                    <span v-if="franja.solicitud" class="badge lp-admin__status">
+                      {{ etiquetaEstado(franja.solicitud.estado) }}
+                    </span>
+                    <span v-else-if="franja.ocupada" class="badge lp-admin__status">Ocupada</span>
+                    <span v-else class="badge lp-calendar__status-free">Libre</span>
+                  </header>
+                  <dl class="lp-admin__mobile-card-details">
+                    <dt>Provincia</dt>
+                    <dd>{{ franja.provincia }}</dd>
+                    <template v-if="franja.solicitud">
+                      <dt>Cliente</dt>
+                      <dd>{{ franja.solicitud.cliente }}</dd>
+                      <dt>Municipio</dt>
+                      <dd>{{ franja.solicitud.municipio }}</dd>
+                    </template>
+                  </dl>
+                  <button
+                    v-if="!franja.ocupada && !franja.solicitud"
+                    class="btn btn-sm btn-outline-danger w-100 mt-3"
+                    type="button"
+                    :disabled="!!eliminandoId"
+                    :aria-label="`Eliminar hueco del ${formatearFranja(franja)}`"
+                    @click="eliminarFranja(franja)"
+                  >{{ eliminandoId === franja.id ? "Eliminando…" : "Eliminar hueco" }}</button>
+                </article>
+              </li>
+            </ul>
+          </section>
         </div>
       </div>
       <chat-component></chat-component>
@@ -41,6 +272,7 @@
 
   <!-- Componentes -->
   <script src="../../assets/js/services/sesion.js"></script>
+  <script src="../../assets/js/services/solicitud.js"></script>
   <script src="../../assets/js/components/Header.js"></script>
   <script src="../../assets/js/components/Footer.js"></script>
   <script src="../../assets/js/components/Chat.js"></script>

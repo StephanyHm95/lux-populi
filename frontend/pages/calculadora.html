@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calculadora solar | Lux Populi</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.png">
 
   <!-- CSS -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
@@ -30,7 +32,7 @@
               el modificador .prevent de Vue evita que se recargue la página y llama al método calcular() en calculadora.js -->
             <form
               id="calculadora-form"
-              class="lp-calculator__form card p-3 p-md-4"
+              class="lp-form-surface lp-calculator__form card p-3 p-md-4"
               @submit.prevent="calcular()"
             >
               <div class="row g-3">
@@ -138,7 +140,7 @@
                     formulario.tipoInstalacion, Vue recalcula internamente esCasa y esEdificio,
                     v.show usa esas computed para que aparezcan o se oculten los bloques correspondientes. -->
                 <div v-show="esCasa" id="datos-vivienda" class="col-12">
-                  <fieldset class="lp-calculator__fieldset">
+                  <fieldset class="lp-form-fieldset">
                     <legend class="float-none w-auto px-2">Datos de la vivienda</legend>
                     <label for="consumoMensual" class="form-label">Consumo eléctrico mensual (kWh)</label>
                     <input
@@ -168,7 +170,7 @@
                 </div>
 
                 <div v-show="esEdificio" id="datos-edificio" class="col-12">
-                  <fieldset class="lp-calculator__fieldset">
+                  <fieldset class="lp-form-fieldset">
                     <legend class="float-none w-auto px-2">Datos del edificio</legend>
                     <div class="row g-3">
                       <div class="col-12 col-md-6">

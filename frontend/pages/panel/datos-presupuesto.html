@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Datos presupuesto</title>
+  <title>Datos del presupuesto</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.png">
 
   <!-- CSS -->
   <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
@@ -16,8 +18,323 @@
 
     <main class="container flex-grow-1 d-flex flex-column py-4 py-md-5">
       <div class="row g-4 flex-grow-1">
-        <div class="col-12">
-          <!-- contenido específico -->
+        <p v-if="cargando" class="col-12 lp-admin__notice" role="status" aria-live="polite">
+          Comprobando el acceso al panel…
+        </p>
+        <div v-else class="col-12 lp-admin">
+          <header class="lp-admin__intro">
+            <p class="lp-admin__eyebrow">Panel de administración</p>
+            <h1>Datos del presupuesto</h1>
+            <p>Configura los valores económicos y los conceptos de la calculadora solar.</p>
+          </header>
+
+          <nav class="lp-admin__tabs" aria-label="Secciones del panel">
+            <a class="lp-admin__tab" :href="enlacePagina('panelSolicitudes')">Solicitudes</a>
+            <a class="lp-admin__tab" :href="enlacePagina('panelCalendario')">Calendario</a>
+            <a class="lp-admin__tab lp-admin__tab--active" :href="enlacePagina('panelDatosPresupuesto')" aria-current="page">
+              Datos
+            </a>
+          </nav>
+
+          <p v-if="errorGeneral" class="alert alert-danger mt-4" role="alert" aria-live="polite">{{ errorGeneral }}</p>
+          <p v-if="mensajeExito" class="alert alert-success mt-4" role="status" aria-live="polite">{{ mensajeExito }}</p>
+
+          <section class="lp-admin__section mt-4" aria-labelledby="parametros-heading">
+            <div class="lp-admin__section-heading">
+              <div>
+                <h2 id="parametros-heading">Parámetros de cálculo</h2>
+                <p>Estos valores se utilizan para calcular el coste y el ahorro estimado.</p>
+              </div>
+            </div>
+
+            <div v-if="errorParametrosCarga" class="alert alert-danger" role="alert" aria-live="polite">
+              <p>{{ errorParametrosCarga }}</p>
+              <button class="btn btn-outline-danger" type="button" :disabled="cargandoParametros" @click="cargarParametros">
+                {{ cargandoParametros ? "Cargando…" : "Volver a cargar parámetros" }}
+              </button>
+            </div>
+
+            <form @submit.prevent="guardarParametros">
+              <div class="lp-budget__parameter-grid">
+                <div>
+                  <label class="form-label" for="precioKwp">Precio por kWp (€/kWp)</label>
+                  <input
+                    id="precioKwp"
+                    v-model.number="parametros.precioKwp"
+                    class="form-control"
+                    :class="{ 'is-invalid': erroresParametros.precioKwp }"
+                    type="number"
+                    name="precioKwp"
+                    min="0"
+                    step="any"
+                    required
+                    :aria-describedby="erroresParametros.precioKwp ? 'errorPrecioKwp' : null"
+                    @input="limpiarErrorParametro('precioKwp')"
+                  >
+                  <p v-if="erroresParametros.precioKwp" id="errorPrecioKwp" class="invalid-feedback d-block" aria-live="polite">
+                    {{ erroresParametros.precioKwp }}
+                  </p>
+                </div>
+                <div>
+                  <label class="form-label" for="potenciaPanel">Potencia del panel (kWp)</label>
+                  <input
+                    id="potenciaPanel"
+                    v-model.number="parametros.potenciaPanel"
+                    class="form-control"
+                    :class="{ 'is-invalid': erroresParametros.potenciaPanel }"
+                    type="number"
+                    name="potenciaPanel"
+                    min="0"
+                    step="any"
+                    required
+                    :aria-describedby="erroresParametros.potenciaPanel ? 'errorPotenciaPanel' : null"
+                    @input="limpiarErrorParametro('potenciaPanel')"
+                  >
+                  <p v-if="erroresParametros.potenciaPanel" id="errorPotenciaPanel" class="invalid-feedback d-block" aria-live="polite">
+                    {{ erroresParametros.potenciaPanel }}
+                  </p>
+                </div>
+                <div>
+                  <label class="form-label" for="precioLuz">Precio de la electricidad (€/kWh)</label>
+                  <input
+                    id="precioLuz"
+                    v-model.number="parametros.precioLuz"
+                    class="form-control"
+                    :class="{ 'is-invalid': erroresParametros.precioLuz }"
+                    type="number"
+                    name="precioLuz"
+                    min="0"
+                    step="any"
+                    required
+                    :aria-describedby="erroresParametros.precioLuz ? 'errorPrecioLuz' : null"
+                    @input="limpiarErrorParametro('precioLuz')"
+                  >
+                  <p v-if="erroresParametros.precioLuz" id="errorPrecioLuz" class="invalid-feedback d-block" aria-live="polite">
+                    {{ erroresParametros.precioLuz }}
+                  </p>
+                </div>
+                <div>
+                  <label class="form-label" for="precioCompensacion">Precio de compensación (€/kWh)</label>
+                  <input
+                    id="precioCompensacion"
+                    v-model.number="parametros.precioCompensacion"
+                    class="form-control"
+                    :class="{ 'is-invalid': erroresParametros.precioCompensacion }"
+                    type="number"
+                    name="precioCompensacion"
+                    min="0"
+                    step="any"
+                    required
+                    :aria-describedby="erroresParametros.precioCompensacion ? 'errorPrecioCompensacion' : null"
+                    @input="limpiarErrorParametro('precioCompensacion')"
+                  >
+                  <p v-if="erroresParametros.precioCompensacion" id="errorPrecioCompensacion" class="invalid-feedback d-block" aria-live="polite">
+                    {{ erroresParametros.precioCompensacion }}
+                  </p>
+                </div>
+              </div>
+              <button class="btn btn-primary mt-3" type="submit" :disabled="guardandoParametros || !parametrosCargados">
+                {{ guardandoParametros ? "Guardando…" : "Guardar parámetros" }}
+              </button>
+            </form>
+          </section>
+
+          <section class="lp-admin__section mt-4" aria-labelledby="conceptos-heading">
+            <div class="lp-admin__section-heading">
+              <div>
+                <h2 id="conceptos-heading">Conceptos adicionales</h2>
+                <p>Administra los importes que se añaden al presupuesto según el tipo de instalación.</p>
+              </div>
+              <button
+                v-if="!mostrarFormularioConcepto"
+                class="btn btn-primary"
+                type="button"
+                :disabled="!conceptosCargados"
+                @click="iniciarAltaConcepto"
+              >Añadir concepto</button>
+            </div>
+
+            <div v-if="errorConceptosCarga" class="alert alert-danger" role="alert" aria-live="polite">
+              <p>{{ errorConceptosCarga }}</p>
+              <button class="btn btn-outline-danger" type="button" :disabled="cargandoConceptos" @click="cargarConceptos">
+                {{ cargandoConceptos ? "Cargando…" : "Volver a cargar conceptos" }}
+              </button>
+            </div>
+
+            <section v-if="mostrarFormularioConcepto" class="lp-admin__form-panel mb-4" aria-labelledby="form-concepto-heading">
+              <h3 id="form-concepto-heading">{{ conceptoEditandoId ? "Editar concepto" : "Añadir concepto" }}</h3>
+              <form @submit.prevent="guardarConcepto">
+                <div class="lp-budget__concept-grid">
+                  <div>
+                    <label class="form-label" for="nombre">Nombre</label>
+                    <input
+                      id="nombre"
+                      v-model.trim="formularioConcepto.nombre"
+                      class="form-control"
+                      :class="{ 'is-invalid': erroresConcepto.nombre }"
+                      type="text"
+                      name="nombre"
+                      maxlength="100"
+                      required
+                      :aria-describedby="erroresConcepto.nombre ? 'errorNombre' : null"
+                      @input="limpiarErrorConcepto('nombre')"
+                    >
+                    <p v-if="erroresConcepto.nombre" id="errorNombre" class="invalid-feedback d-block" aria-live="polite">
+                      {{ erroresConcepto.nombre }}
+                    </p>
+                  </div>
+                  <div>
+                    <label class="form-label" for="precio">Precio (€)</label>
+                    <input
+                      id="precio"
+                      v-model.number="formularioConcepto.precio"
+                      class="form-control"
+                      :class="{ 'is-invalid': erroresConcepto.precio }"
+                      type="number"
+                      name="precio"
+                      min="0"
+                      step="any"
+                      required
+                      :aria-describedby="erroresConcepto.precio ? 'errorPrecioConcepto' : null"
+                      @input="limpiarErrorConcepto('precio')"
+                    >
+                    <p v-if="erroresConcepto.precio" id="errorPrecioConcepto" class="invalid-feedback d-block" aria-live="polite">
+                      {{ erroresConcepto.precio }}
+                    </p>
+                  </div>
+                  <div>
+                    <label class="form-label" for="aplicaA">Se aplica a</label>
+                    <select
+                      id="aplicaA"
+                      v-model="formularioConcepto.aplicaA"
+                      class="form-select"
+                      :class="{ 'is-invalid': erroresConcepto.aplicaA }"
+                      name="aplicaA"
+                      required
+                      :aria-describedby="erroresConcepto.aplicaA ? 'errorAplicaA' : null"
+                      @change="limpiarErrorConcepto('aplicaA')"
+                    >
+                      <option value="casa">Casa</option>
+                      <option value="edificio">Edificio</option>
+                      <option value="ambos">Ambos</option>
+                    </select>
+                    <p v-if="erroresConcepto.aplicaA" id="errorAplicaA" class="invalid-feedback d-block" aria-live="polite">
+                      {{ erroresConcepto.aplicaA }}
+                    </p>
+                  </div>
+                  <div class="lp-budget__checkbox">
+                    <input
+                      id="soloPlana"
+                      v-model="formularioConcepto.soloPlana"
+                      class="form-check-input"
+                      :class="{ 'is-invalid': erroresConcepto.soloPlana }"
+                      type="checkbox"
+                      name="soloPlana"
+                      :aria-describedby="erroresConcepto.soloPlana ? 'errorSoloPlana' : null"
+                      @change="limpiarErrorConcepto('soloPlana')"
+                    >
+                    <label class="form-check-label" for="soloPlana">Solo cubierta plana</label>
+                    <p v-if="erroresConcepto.soloPlana" id="errorSoloPlana" class="invalid-feedback d-block" aria-live="polite">
+                      {{ erroresConcepto.soloPlana }}
+                    </p>
+                  </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                  <button class="btn btn-primary" type="submit" :disabled="guardandoConcepto">
+                    {{ guardandoConcepto ? "Guardando…" : (conceptoEditandoId ? "Guardar cambios" : "Crear concepto") }}
+                  </button>
+                  <button class="btn btn-outline-secondary" type="button" :disabled="guardandoConcepto" @click="cancelarEdicionConcepto">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <p v-if="cargandoConceptos" class="lp-admin__notice" role="status" aria-live="polite">Cargando conceptos…</p>
+            <p v-else-if="conceptosCargados && conceptos.length === 0" class="lp-admin__notice" role="status" aria-live="polite">
+              Todavía no hay conceptos adicionales.
+            </p>
+            <div
+              v-if="conceptosCargados && conceptos.length > 0"
+              class="d-none d-md-block table-responsive lp-admin__table-wrap"
+              role="region"
+              aria-label="Tabla de conceptos adicionales"
+              tabindex="0"
+            >
+              <table class="table align-middle lp-admin__table lp-budget__table">
+                <caption class="visually-hidden">Conceptos adicionales del presupuesto</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Precio</th>
+                    <th scope="col">Aplica a</th>
+                    <th scope="col">Solo plana</th>
+                    <th scope="col"><span class="visually-hidden">Acciones</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="concepto in conceptos" :key="concepto.id">
+                    <td>{{ concepto.nombre }}</td>
+                    <td>{{ formatearEuros(concepto.precio) }}</td>
+                    <td>{{ etiquetaAplicaA(concepto.aplicaA) }}</td>
+                    <td>{{ concepto.soloPlana ? "Sí" : "No" }}</td>
+                    <td class="lp-budget__actions">
+                      <button
+                        class="btn btn-sm btn-outline-success"
+                        type="button"
+                        :disabled="!!conceptoEnCurso"
+                        :aria-label="`Editar concepto ${concepto.nombre}`"
+                        @click="iniciarEdicionConcepto(concepto)"
+                      >Editar</button>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        type="button"
+                        :disabled="!!conceptoEnCurso"
+                        :aria-label="`Eliminar concepto ${concepto.nombre}`"
+                        @click="eliminarConcepto(concepto)"
+                      >{{ conceptoEnCurso === concepto.id ? "Eliminando…" : "Eliminar" }}</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ul
+              v-if="conceptosCargados && conceptos.length > 0"
+              class="lp-admin__mobile-list d-md-none list-unstyled"
+              aria-label="Conceptos adicionales del presupuesto"
+            >
+              <li v-for="concepto in conceptos" :key="concepto.id">
+                <article class="lp-admin__mobile-card">
+                  <header class="d-flex justify-content-between align-items-start gap-2">
+                    <h3 class="lp-admin__mobile-card-title">{{ concepto.nombre }}</h3>
+                    <strong>{{ formatearEuros(concepto.precio) }}</strong>
+                  </header>
+                  <dl class="lp-admin__mobile-card-details">
+                    <dt>Aplica a</dt>
+                    <dd>{{ etiquetaAplicaA(concepto.aplicaA) }}</dd>
+                    <dt>Solo tejado plano</dt>
+                    <dd>{{ concepto.soloPlana ? "Sí" : "No" }}</dd>
+                  </dl>
+                  <div class="lp-admin__mobile-card-actions">
+                    <button
+                      class="btn btn-sm btn-outline-success"
+                      type="button"
+                      :disabled="!!conceptoEnCurso"
+                      :aria-label="`Editar concepto ${concepto.nombre}`"
+                      @click="iniciarEdicionConcepto(concepto)"
+                    >Editar</button>
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      type="button"
+                      :disabled="!!conceptoEnCurso"
+                      :aria-label="`Eliminar concepto ${concepto.nombre}`"
+                      @click="eliminarConcepto(concepto)"
+                    >{{ conceptoEnCurso === concepto.id ? "Eliminando…" : "Eliminar" }}</button>
+                  </div>
+                </article>
+              </li>
+            </ul>
+          </section>
         </div>
       </div>
       <chat-component></chat-component>
@@ -41,6 +358,7 @@
 
   <!-- Componentes -->
   <script src="../../assets/js/services/sesion.js"></script>
+  <script src="../../assets/js/services/solicitud.js"></script>
   <script src="../../assets/js/components/Header.js"></script>
   <script src="../../assets/js/components/Footer.js"></script>
   <script src="../../assets/js/components/Chat.js"></script>

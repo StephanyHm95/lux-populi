@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lux Populi | Calcula tu ahorro solar</title>
+  <link rel="icon" type="image/svg+xml" sizes="any" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/Favicon%20%C2%B7%2016%20px-16.png">
 
   <!-- CSS -->
   <link rel="stylesheet" href="../assets/css/bootstrap.min.css">
@@ -21,17 +23,26 @@
       <div class="row g-4 flex-grow-1">
         <div class="col-12">
           <section class="lp-home-hero" aria-labelledby="home-title">
-            <p class="lp-home-hero__eyebrow">Energía solar para tu hogar</p>
-            <h1 id="home-title" class="lp-home-hero__title">
-              Descubre cuánto puedes ahorrar con energía solar
-            </h1>
-            <p class="lp-home-hero__description">
-              Calcula una estimación de la producción, el coste y el ahorro de una instalación solar
-              para tu vivienda o edificio, estés donde estés en España.
-            </p>
-            <a class="lp-home-hero__button" :href="enlacePagina('calculadora')">
-              Calcula tu ahorro
-            </a>
+            <div class="lp-home-hero__content">
+              <p class="lp-home-hero__eyebrow">Energía solar para tu hogar</p>
+              <h1 id="home-title" class="lp-home-hero__title">
+                Descubre cuánto puedes ahorrar con energía solar
+              </h1>
+              <p class="lp-home-hero__description">
+                Calcula una estimación de la producción, el coste y el ahorro de una instalación solar
+                para tu vivienda o edificio, estés donde estés en España.
+              </p>
+              <a class="lp-home-hero__button" :href="enlacePagina('calculadora')">
+                Calcula tu ahorro
+              </a>
+            </div>
+            <img
+              class="lp-home-hero__image"
+              src="/assets/img/Casa%20con%20paneles.png"
+              alt=""
+              aria-hidden="true"
+              fetchpriority="high"
+            >
           </section>
 
           <section class="lp-home-section" aria-labelledby="ayudas-title">

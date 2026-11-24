@@ -107,8 +107,13 @@ const HeaderComponent = {
     <header class="lp-header">
       <div class="lp-header__inner">
         <a class="lp-header__brand" :href="enlacePagina('inicio')" aria-label="Lux Populi, inicio">
-          <span class="lp-header__brand-mark" aria-hidden="true">LP</span>
-          <span class="lp-header__brand-name">Lux <strong>Populi</strong></span>
+          <img
+            class="lp-header__brand-logo"
+            src="/assets/img/Lux%20Populi%20%C2%B7%20horizontal.svg"
+            alt=""
+            width="181"
+            height="40"
+          >
         </a>
 
         <button
@@ -149,7 +154,7 @@ const HeaderComponent = {
             <template v-else-if="esCliente || esAdmin">
               <span class="lp-header__account">{{ saludo }}</span>
               <button
-                class="lp-header__button lp-header__button--secondary"
+                class="lp-header__button"
                 type="button"
                 :disabled="saliendo"
                 @click="cerrarSesion"
@@ -159,7 +164,7 @@ const HeaderComponent = {
             </template>
           </template>
 
-          <p v-if="errorSesion" class="lp-header__error" role="alert" aria-live="polite">
+          <p v-if="errorSesion" class="lp-header__error text-danger" role="alert" aria-live="polite">
             {{ errorSesion }}
           </p>
         </nav>
