@@ -31,12 +31,13 @@ services:
       IA_URL: http://ia:8000
     ports:
       - "${PUERTO_PUBLICO:-3000}:3000"
+    volumes:
+      - presupuestos:/opt/luxpopuli/uploads/presupuestos
     depends_on:
       db:
         condition: service_healthy
       ia:
         condition: service_healthy
-
 
   ia:
     build:
@@ -57,3 +58,4 @@ services:
 
 volumes:
   datos_mysql:
+  presupuestos:

@@ -18,4 +18,4 @@ node --test tests/consultas.test.js
 
 Las pruebas usan MySQL local y las variables del `.env`. Crean una base y una carpeta temporales y las eliminan al terminar. Comprueban los permisos, los filtros, los datos del detalle y la descarga del PDF. No necesitan enviar correos ni subir archivos desde el panel.
 
-Estas rutas permiten consultar y descargar. El envío al instalador y la subida del presupuesto se incorporan por separado.
+El envío al instalador y la subida del presupuesto se explican en [correo-y-presupuestos.md](correo-y-presupuestos.md).

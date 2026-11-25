@@ -10,6 +10,11 @@
 | 18 · PUT /api/solicitudes/:id/franja | Cambiar el hueco de una solicitud propia |
 | 19 · PUT /api/solicitudes/:id/cancelar | Cancelar la solicitud y liberar el hueco |
 | 20 · PUT /api/solicitudes/:id/respuesta | Aceptar o rechazar un presupuesto |
+| 21 · GET /api/solicitudes/:id/presupuesto | Descargar el PDF propio o consultarlo como admin |
+| 22 · GET /api/gestion/solicitudes | Listar las solicitudes y filtrar por provincia o estado |
+| 23 · GET /api/gestion/solicitudes/:id | Consultar el detalle y las acciones permitidas |
+| 24 · POST /api/gestion/solicitudes/:id/enviar | Enviar los datos de la visita al instalador |
+| 25 · POST /api/gestion/solicitudes/:id/presupuesto | Subir el PDF y dejar el presupuesto disponible para el cliente |
 
 La ruta 5 es publica. Las rutas de solicitudes necesitan la sesion del cliente.
 El administrador tambien puede usar la ruta 19, segun los estados del contrato.
@@ -67,12 +72,10 @@ npm run test:backend
 Remove-Item Env:PRUEBA_PVGIS_REAL
 ```
 
-## Lo que queda
+## Correo y presupuestos
 
-- Ruta 21: descargar el PDF propio o desde la sesion del admin. Guardar los PDF fuera de las carpetas publicas.
-- Rutas 22 y 23: listado y detalle de solicitudes del admin.
-- Servicio `email.js` y ruta 24: enviar la solicitud al instalador.
-- Ruta 25: subir el presupuesto en PDF desde el panel del admin.
-- Conectar y probar las pantallas del frontend con estas rutas.
+El correo de las visitas (BE 06) se subió el 23/11/2026 a `backend/gestion-pendiente`, en el commit `d1dc653`. Falta revisarlo y unirlo a `main`. Lo hecho y lo probado está en [servicio-correo.md](servicio-correo.md).
 
-BE 02 (PVGIS), BE 03 (calculo) y BE 04 (simulaciones) estan implementadas. BE 05 sigue parcial: estan las rutas 16 a 20 y falta la 21.
+Las rutas 21 a 23 se subieron el 24/11/2026 en el commit `f5bbde8`. Este cambio añade las rutas 24 y 25, sus pruebas y el guardado de los PDF al reiniciar la web. Los pasos para configurarlas y probarlas están en [correo-y-presupuestos.md](correo-y-presupuestos.md).
+
+Queda revisar y unir estos cambios a `main`, configurar el correo de la web, conectar las pantallas que aún usan datos de ejemplo y comprobar que todo funciona junto.

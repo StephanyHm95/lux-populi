@@ -1,7 +1,13 @@
-// Rutas 22-23: consultar las solicitudes del admin
+// Rutas 22-25: gestion del admin
 const express = require("express");
 const db = require("../db");
 const { requiereRol } = require("../middleware/sesion");
+const { enviarSolicitud, emailValido } = require("../servicios/email");
+const { carpetaPresupuestos, rutaPresupuesto } = require("../servicios/presupuestos");
+const multer = require("multer");
+const fs = require("fs/promises");
+const path = require("path");
+const { randomUUID } = require("crypto");
 const router = express.Router();
 
 // Todas las rutas de este archivo son solo para el administrador
@@ -14,7 +20,13 @@ function idValido(id) {
     return true;
 }
 
-// Datos de una solicitud para la pantalla del administrador
+function reservaEnUso(error) {
+    if (error.code === "ER_LOCK_DEADLOCK") return true;
+    if (error.code === "ER_LOCK_WAIT_TIMEOUT") return true;
+    return false;
+}
+
+// Se usa al consultar el detalle y al preparar el correo al instalador
 async function leerSolicitud(conexion, id) {
     const resultado = await conexion.query(
         `SELECT s.id, s.estado, s.direccion, s.municipio, s.codigo_postal, s.email_instalador,
@@ -132,6 +144,166 @@ router.get("/solicitudes/:id", async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error del servidor" });
+    }
+});
+
+// Ruta 24: enviar al instalador. El estado cambia solo si el correo se acepta.
+router.post("/solicitudes/:id/enviar", async (req, res) => {
+    let conexion;
+    try {
+        const id = Number(req.params.id);
+        if (!idValido(id)) return res.status(404).json({ error: "La solicitud no existe" });
+        let emailInstalador;
+        if (req.body) emailInstalador = req.body.emailInstalador;
+        if (typeof emailInstalador === "string") emailInstalador = emailInstalador.trim().toLowerCase();
+        if (!emailValido(emailInstalador)) {
+            return res.status(400).json({ error: "Escribe un email valido de hasta 150 caracteres", campo: "emailInstalador" });
+        }
+        conexion = await db.getConnection();
+        await conexion.beginTransaction();
+        // Bloqueamos solo la solicitud, para no enviar dos correos a la vez
+        const resultado = await conexion.query("SELECT estado FROM solicitud WHERE id = ? FOR UPDATE", [id]);
+        if (resultado[0].length === 0) {
+            await conexion.rollback();
+            return res.status(404).json({ error: "La solicitud no existe" });
+        }
+        if (resultado[0][0].estado !== "solicitada") {
+            await conexion.rollback();
+            return res.status(409).json({ error: "Esta solicitud ya no se puede enviar" });
+        }
+        const solicitud = await leerSolicitud(conexion, id);
+        await enviarSolicitud(solicitud, emailInstalador);
+        await conexion.query(
+            "UPDATE solicitud SET estado = 'enviada', email_instalador = ?, fecha_estado = NOW() WHERE id = ?",
+            [emailInstalador, id]
+        );
+        await conexion.commit();
+        res.json({ id: id, estado: "enviada", emailInstalador: emailInstalador });
+    } catch (error) {
+        if (conexion) {
+            try {
+                await conexion.rollback();
+            } catch (errorRollback) {
+                console.error(errorRollback);
+            }
+        }
+        if (error.status === 503) return res.status(503).json({ error: error.message });
+        if (reservaEnUso(error)) return res.status(409).json({ error: "Se esta modificando la solicitud. Intentalo de nuevo" });
+        console.error(error);
+        res.status(500).json({ error: "Error del servidor" });
+    } finally {
+        if (conexion) conexion.release();
+    }
+});
+
+// Multer recibe un PDF de hasta 5 MB. Aun no lo escribe en el disco.
+const subida = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 1, parts: 2, fieldSize: 100 }
+});
+function leerPdf(req, res, next) {
+    subida.single("pdf")(req, res, error => {
+        if (error) {
+            let mensaje = "Envia el importe y un solo archivo en el campo pdf";
+            if (error.code === "LIMIT_FILE_SIZE") mensaje = "El PDF no puede superar los 5 MB";
+            return res.status(400).json({ error: mensaje, campo: "pdf" });
+        }
+        next();
+    });
+}
+
+// Ruta 25: guardar el PDF y cambiar el estado del presupuesto
+router.post("/solicitudes/:id/presupuesto", leerPdf, async (req, res) => {
+    let conexion;
+    let archivoGuardado = null;
+    try {
+        const id = Number(req.params.id);
+        if (!idValido(id)) return res.status(404).json({ error: "La solicitud no existe" });
+        if (!req.file) return res.status(400).json({ error: "Adjunta el presupuesto en PDF", campo: "pdf" });
+        if (path.extname(req.file.originalname).toLowerCase() !== ".pdf") {
+            return res.status(400).json({ error: "Solo se permiten archivos PDF", campo: "pdf" });
+        }
+        if (req.file.mimetype !== "application/pdf") {
+            return res.status(400).json({ error: "Solo se permiten archivos PDF", campo: "pdf" });
+        }
+        if (req.file.buffer.subarray(0, 5).toString() !== "%PDF-") {
+            return res.status(400).json({ error: "El archivo no es un PDF", campo: "pdf" });
+        }
+        if (typeof req.body.importe !== "string") {
+            return res.status(400).json({ error: "Introduce un importe valido", campo: "importe" });
+        }
+        const textoImporte = req.body.importe.trim();
+        if (/^\d+(\.\d{1,2})?$/.test(textoImporte) === false) {
+            return res.status(400).json({ error: "Introduce un importe positivo con hasta dos decimales", campo: "importe" });
+        }
+        const importe = Number(textoImporte);
+        let importeValido = Number.isFinite(importe);
+        if (importe <= 0) importeValido = false;
+        if (importe > 99999999.99) importeValido = false;
+        if (!importeValido) {
+            return res.status(400).json({ error: "Introduce un importe entre 0,01 y 99999999,99", campo: "importe" });
+        }
+
+        conexion = await db.getConnection();
+        await conexion.beginTransaction();
+        const resultado = await conexion.query("SELECT estado FROM solicitud WHERE id = ? FOR UPDATE", [id]);
+        if (resultado[0].length === 0) {
+            await conexion.rollback();
+            return res.status(404).json({ error: "La solicitud no existe" });
+        }
+        if (resultado[0][0].estado !== "enviada") {
+            await conexion.rollback();
+            return res.status(409).json({ error: "Solo se puede subir el presupuesto de una solicitud enviada" });
+        }
+        const anterior = await conexion.query("SELECT id FROM presupuesto WHERE solicitud_id = ?", [id]);
+        if (anterior[0].length > 0) {
+            await conexion.rollback();
+            return res.status(409).json({ error: "Esta solicitud ya tiene presupuesto" });
+        }
+        // El nombre lo crea el servidor. No usamos el nombre enviado por el navegador.
+        const nombre = randomUUID() + ".pdf";
+        await fs.mkdir(carpetaPresupuestos, { recursive: true });
+        const rutaArchivo = rutaPresupuesto(nombre);
+        const archivo = await fs.open(rutaArchivo, "wx");
+        archivoGuardado = rutaArchivo;
+        try {
+            await archivo.writeFile(req.file.buffer);
+        } finally {
+            await archivo.close();
+        }
+        await conexion.query(
+            "INSERT INTO presupuesto (solicitud_id, importe, archivo_pdf) VALUES (?, ?, ?)", [id, importe, nombre]
+        );
+        await conexion.query("UPDATE solicitud SET estado = 'presupuesto_enviado', fecha_estado = NOW() WHERE id = ?", [id]);
+        const presupuesto = await conexion.query(
+            `SELECT importe, DATE_FORMAT(fecha_envio, '%Y-%m-%d %H:%i') AS fechaEnvio, fecha_respuesta AS fechaRespuesta
+             FROM presupuesto WHERE solicitud_id = ?`, [id]
+        );
+        await conexion.commit();
+        archivoGuardado = null;
+        res.status(201).json({ id: id, estado: "presupuesto_enviado", presupuesto: presupuesto[0][0] });
+    } catch (error) {
+        if (conexion) {
+            try {
+                await conexion.rollback();
+            } catch (errorRollback) {
+                console.error(errorRollback);
+            }
+        }
+        // Si falla el guardado en la base de datos, quitamos el archivo que acabamos de escribir
+        if (archivoGuardado !== null) {
+            try {
+                await fs.unlink(archivoGuardado);
+            } catch (errorArchivo) {
+                if (errorArchivo.code !== "ENOENT") console.error(errorArchivo);
+            }
+        }
+        if (error.code === "ER_DUP_ENTRY") return res.status(409).json({ error: "Esta solicitud ya tiene presupuesto" });
+        if (reservaEnUso(error)) return res.status(409).json({ error: "Se esta modificando la solicitud. Intentalo de nuevo" });
+        console.error(error);
+        res.status(500).json({ error: "Error del servidor" });
+    } finally {
+        if (conexion) conexion.release();
     }
 });
 
